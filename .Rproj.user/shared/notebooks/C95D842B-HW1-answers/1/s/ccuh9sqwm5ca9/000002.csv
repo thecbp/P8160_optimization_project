@@ -1,0 +1,7 @@
+"0","# set up data into correct format for glmnet"
+"0","predictors = train %>% select(fp001:surface_area2) %>% as.matrix(.)"
+"0","response = train$solubility"
+"0","lambdas = exp(seq(-10, 10, length = 10000))"
+"0","# perform the ridge regression CV for lambda"
+"0","ridge.model = cv.glmnet(predictors, response, "
+"0","                        alpha = 0, lambda = lambdas, type.measure = ""mse"")"

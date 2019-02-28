@@ -1,0 +1,7 @@
+"0","lasso.model = cv.glmnet(predictors, response, "
+"0","                        alpha = 1, lambda = lambdas, type.measure = ""mse"")"
+"0","best.lasso.lambda = lasso.model$lambda.1se"
+"0","best.lasso.coeffs = predict(lasso.model, s = best.lasso.lambda, type = ""coefficients"")"
+"0","# Make the predictions based off of the optimum ridge coefficients"
+"0","lasso.test.predictions = as.matrix(cbind(const = 1, test.predictors)) %*% best.lasso.coeffs"
+"0","lasso.MSE = mean((test$solubility - lasso.test.predictions)^2)"

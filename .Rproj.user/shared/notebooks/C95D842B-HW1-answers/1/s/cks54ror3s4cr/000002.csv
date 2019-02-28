@@ -1,0 +1,7 @@
+"0","best.ridge.lambda = ridge.model$lambda.1se"
+"0","best.ridge.coeffs = predict(ridge.model, s = best.ridge.lambda, type = ""coefficients"")"
+"0","test.predictors = test %>% "
+"0","  select(fp001:surface_area2)"
+"0","# Make the predictions based off of the optimum ridge coefficients"
+"0","ridge.test.predictions = as.matrix(cbind(const = 1, test.predictors)) %*% best.ridge.coeffs"
+"0","ridge.MSE = mean((test$solubility - ridge.test.predictions)^2)"

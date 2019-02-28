@@ -1,0 +1,2 @@
+"0","train = read.csv(file = ""./solubility_train.csv"") %>% janitor::clean_names()"
+"0","test = read.csv(file = ""./solubility_test.csv"") %>% janitor::clean_names()"
