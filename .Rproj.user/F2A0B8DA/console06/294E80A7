@@ -1,0 +1,41 @@
+]0;~/Documents/columbia/S2019/Computing/project/Optimization[?1034hChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/INDEX[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/4EF907E7[m
+	[31mmodified:   .Rproj.user/shared/notebooks/paths[m
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	[31m.Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31m.Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[31m.Rproj.user/F2A0B8DA/sources/s-797CBE40/7275362B[m
+	[31m.Rproj.user/F2A0B8DA/sources/s-797CBE40/7275362B-contents[m
+	[31m.Rproj.user/F2A0B8DA/sources/s-797CBE40/C66A2B07-contents[m
+	[31m.Rproj.user/F2A0B8DA/sources/s-797CBE40/E321444[m
+	[31m.Rproj.user/F2A0B8DA/sources/s-797CBE40/E321444-contents[m
+	[31m.Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/[m
+	[31mlogistic-lasso.Rmd[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git pull
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+remote: Enumerating objects: 5, done.[K
+remote: Counting objects:  20% (1/5)   [Kremote: Counting objects:  40% (2/5)   [Kremote: Counting objects:  60% (3/5)   [Kremote: Counting objects:  80% (4/5)   [Kremote: Counting objects: 100% (5/5)   [Kremote: Counting objects: 100% (5/5), done.[K
+remote: Compressing objects: 100% (1/1)   [Kremote: Compressing objects: 100% (1/1), done.[K
+remote: Total 3 (delta 2), reused 3 (delta 2), pack-reused 0[K
+Unpacking objects:  33% (1/3)   Unpacking objects:  66% (2/3)   Unpacking objects: 100% (3/3)   Unpacking objects: 100% (3/3), done.
+From github.com:thecbp/P8160_optimization_project
+   f4defd0..38b775c  master     -> origin/master
+Updating f4defd0..38b775c
+Fast-forward
+ Group Project 2.Rmd | 4 [32m+++[m[31m-[m
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add .

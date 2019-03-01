@@ -1,0 +1,35 @@
+---
+title: "CD Logistic LASSO"
+author: "Christian Pascual"
+date: "2/28/2019"
+output: html_document
+---
+
+Goal: Build a logistic-LASSO model to select features, and impletement the pathwise coordinatewise optimization algorithm to obtain a path of solutions with a sequence of descending λ’s.
+
+## Standardize the data for the regularization
+
+```{r data, message = FALSE }
+library(tidyverse)
+
+standardize = function(col) {
+  mean = mean(col)
+  stdev = sd(col)
+  return((col - mean)/stdev)
+}
+
+# just standardize the covariates
+standardized.data = read.csv(file = "breast-cancer-1.csv") %>% 
+  select(radius_mean:fractal_dimension_worst) %>% 
+  map_df(.x = ., standardize)
+
+# add back in the response and ids
+data = cbind(read.csv(file = "breast-cancer-1.csv") %>% select(id:diagnosis), 
+             standardized.data) %>% 
+  mutate(diagnosis = factor(diagnosis, levels = c("B", "M")))
+```
+
+```{r}
+colnames(cancer)
+```
+

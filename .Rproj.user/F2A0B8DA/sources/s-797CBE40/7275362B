@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551412953675.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "113173584",
+    "id" : "7275362B",
+    "lastKnownWriteTime" : 1551421028,
+    "last_content_update" : 1551421028095,
+    "path" : "~/Documents/columbia/S2019/Computing/project/Optimization/logistic-lasso.Rmd",
+    "project_path" : "logistic-lasso.Rmd",
+    "properties" : {
+        "cursorPosition" : "23,29",
+        "scrollLine" : "2",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
