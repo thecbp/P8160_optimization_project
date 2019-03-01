@@ -52,6 +52,8 @@ The goal of the exerise is to build a predictive model based on logistic regress
 \end{enumerate}
 # Answer:  your answer starts here...
 ```{r }
-
+library(tidyverse)
+#Reading the data
+breast_data = read_csv("breast-cancer-1.csv")
 ```
 
