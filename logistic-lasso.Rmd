@@ -7,11 +7,35 @@ output: html_document
 
 Goal: Build a logistic-LASSO model to select features, and impletement the pathwise coordinatewise optimization algorithm to obtain a path of solutions with a sequence of descending λ’s.
 
+```{r setup, message = FALSE }
+library(tidyverse)
+library(glmnet)
+```
+
+## Important Equations
+
+The goal of this part of the optimizaiton project is to implement logistic-LASSO regression using coordinate descent. The following are important equations for this task:
+
+Using the Taylor expansion around "current estimates" $(\beta_0, \mathbf{\beta_1})$, we get an approximation to the logistic log-likelihood:
+$$f(\beta_0, \mathbf{\beta_1}) \approx l(\beta_0, \mathbf{\beta_1}) = -\frac{1}{2n} \sum^n_{i=1} \omega_i(z_i  -\beta_0 - \mathbf{x}^T_i\mathbf{\beta_1})^2 + C(\tilde{\beta_0}, \tilde{\mathbf{\beta_1}})$$
+
+where we have the working response:
+$$z_i = \tilde{\beta_0} + \mathbf{x}^T_i\tilde{\mathbf{\beta_1}} + \frac{y_i - \tilde{p_i}(x_i)}{\tilde{p_i}(x_i)(1 - \tilde{p_i}(x_i))}$$
+
+the working weights:
+$$\omega_i = \tilde{p_i}(x_i)(1 - \tilde{p_i}(x_i))$$
+and the probability given the current parameters:
+$$\tilde{p_i}(x_i) = \frac{e^{\tilde{\beta_0} + \mathbf{x}^T_i\mathbf{\beta_1}}}{1 + e^{\tilde{\beta_0} + \mathbf{x}^T_i\mathbf{\beta_1}}}$$
+
+We thus want to minimize the following equation
+$$\mathop{min}_{(\beta_0, \mathbf{\beta_1)}} \bigg( \frac{1}{2n} \sum^n_{i=1} \omega_i(z_i  -\beta_0 - \mathbf{x}^T_i\mathbf{\beta_1})^2  + \lambda \sum^p_{j=0}|\beta_j| \bigg)$$
+
+In coordinate descent, we know that if each observation has some weight $\omega_i$ associated with it, the updated $\tilde{\beta_j}$ is given by a weighted version of the soft-thresholding function:
+$$\tilde{\beta_j} = \frac{S(\sum_i\omega_ix_{i,j}(y_i - \tilde{y}_i^{(-j)}), \gamma)}{\sum\omega_ix^2_{i,j}}$$
+
 ## Standardize the data for the regularization
 
 ```{r data, message = FALSE }
-library(tidyverse)
-
 standardize = function(col) {
   mean = mean(col)
   stdev = sd(col)
@@ -24,12 +48,146 @@ standardized.data = read.csv(file = "breast-cancer-1.csv") %>%
   map_df(.x = ., standardize)
 
 # add back in the response and ids
-data = cbind(read.csv(file = "breast-cancer-1.csv") %>% select(id:diagnosis), 
-             standardized.data) %>% 
-  mutate(diagnosis = factor(diagnosis, levels = c("B", "M")))
+data = cbind(read.csv(file = "breast-cancer-1.csv") %>% select(diagnosis), standardized.data) %>% 
+  mutate(diagnosis = ifelse(diagnosis == "M", 1, 0))
 ```
 
-```{r}
-colnames(cancer)
+```{r helper-functions }
+soft.threshold = function(beta, gamma) {
+  new.beta = beta
+    if (abs(beta) > gamma && beta > 0) {
+      new.beta = beta - gamma
+    } else if (abs(beta) > gamma && beta < 0) {
+      new.beta = beta + gamma
+    } else {
+      new.beta = 0
+    }
+  return(new.beta)
+}
+
+calc.cur.p = function(intercept, data, betas) {
+  # return n x 1 array of current probabilities evaluated with given betas
+  return(
+    exp(intercept * rep(1, nrow(data)) + data %*% betas) / (1 + exp(intercept * rep(1, nrow(data)) + data %*% betas))
+  )
+}
+
+calc.working.resp = function(intercept, data, resp, betas, p) {
+  # return n x 1 array of working responses evaluated with given betas
+  return(
+    intercept * rep(1, nrow(data)) + data %*% betas + (resp - p) / (p * (1 - p))
+  )
+}
+
+calc.working.weights = function(p) {
+  # return n x 1 array of working weights for the data
+  return(p * (1 - p))
+}
+
+calc.log.lik = function(data, weights, w.resp, intercept, betas, lambda) {
+  # return the log-likelihood of data and current params
+  return(
+    log.lik = 1/(2 * nrow(data)) * 
+      sum((weights * (w.resp - intercept * rep(1, nrow(data)) - data %*% betas))^2) + lambda * sum(abs(betas))
+  )
+}
 ```
 
+```{r log-lasso-algo }
+LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
+  
+  ### Parameters: #####################################################
+  # X : design matrix                                                 #
+  # y : response variable (should be binary)                          #
+  # beta : starting beta coefficients to start from                   #
+  # lambda : constraining parameter for LASSO penalization            #
+  # tol : how precise should our convergence be                       #
+  # maxiter : how many iterations should be performed before stopping #
+  #####################################################################
+  
+  # Turn the betas into their own matrix
+  X = as.matrix(X)
+  beta = as.matrix(beta)
+  n = length(y)
+  
+  # Initialize important parameters before starting the coordinate descent
+  beta0 = sum(y - X %*% beta) / n
+  p = calc.cur.p(intercept = beta0, data = X, betas = beta)
+  z = calc.working.resp(intercept = beta0, data = X, resp = y, 
+                        betas = beta, p = p)
+  omega = calc.working.weights(p)
+  log.lik = calc.log.lik(data = X, weights = omega, w.resp = z,
+                         intercept = beta0, betas = beta, lambda = lambda)
+
+  # Initialize the row for tracking each of these parameters
+  path = c(iter = 0, intercept = beta0, beta, log.lik = log.lik)
+    
+    for (j in 1:maxiter) {
+      
+      old.beta = beta
+      # Coordinate descent
+      for (k in 1:length(beta)) {
+        diff.y = (X %*% beta) - (X[,-k] %*% beta[-k])
+        threshold.prior = sum(omega * X[,k] * diff.y)
+        beta[k] = soft.threshold(threshold.prior, 
+                                 gamma = lambda) / sum(omega * X[,k]^2)  
+      }
+      
+      # keep the old log-likelihood for convergence check
+      old.log.lik = log.lik
+      
+      old.beta0 = beta0
+      
+      
+      # With new betas, recalculate the working parameters
+      beta0 = sum(y - X %*% beta) / n
+      p = calc.cur.p(intercept = beta0, data = X, betas = beta)
+      z = calc.working.resp(intercept = beta0, data = X, resp = y, 
+                        betas = beta, p = p)
+      omega = calc.working.weights(p)
+      log.lik = calc.log.lik(data = X, weights = omega, w.resp = z,
+                         intercept = beta0, betas = beta, lambda = lambda)
+      
+      # Append it to tracking matrix
+      path = rbind(path, 
+                   c(iter = j, intercept = beta0, beta, log.lik = log.lik))
+      
+      # Break the loop if the diff between likelihoods is below tolerance
+      if (
+        norm(rbind(beta0, beta) - rbind(old.beta0, old.beta), "F") < tol
+        ) { break } 
+    } 
+  
+  return(list(
+    path = as.tibble(path),
+    coefficients = c(beta0, beta))
+    )
+  }
+```
+
+```{r cancer-fit }
+X = data %>% select(radius_mean:fractal_dimension_worst) %>% as.matrix(.)
+y = data$diagnosis
+
+# initial guess will be what is produced by regular linear regression
+beta = lm(diagnosis ~ ., data = data)
+coeffs = as.matrix(beta$coefficients[2:length(beta$coefficients)])
+lambda = 0.1
+
+cancer.CD = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda)
+```
+
+```{r model-viz }
+tidy.cancer = cancer.CD$path %>% 
+  gather(., key = "covariate", value = "coeff_est", V1:V30)
+
+ggplot(data = tidy.cancer, aes(x = iter, y = coeff_est, 
+                               color = covariate, group = covariate)) +
+  geom_line() +
+  theme(legend.position = "none") +
+  labs(
+    title = "Log-LASSO coefficient estimates through iteration",
+    x = "Iteration Cycle",
+    y = "Coefficient Estimate"
+  )
+```

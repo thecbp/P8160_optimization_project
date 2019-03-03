@@ -39,3 +39,70 @@ Fast-forward
  Group Project 2.Rmd | 4 [32m+++[m[31m-[m
  1 file changed, 3 insertions(+), 1 deletion(-)
 ]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add .
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commit -m "Added standadrd[K[K[Krdization code  for AS[K[KLASS[K[K[K[Kbreast cancer data"
+[master 798ddbe] Added standardization code for breast cancer data
+ 17 files changed, 338 insertions(+), 24 deletions(-)
+ create mode 100644 .Rproj.user/F2A0B8DA/console06/294E80A7
+ create mode 100644 .Rproj.user/F2A0B8DA/console06/294E80A7.env
+ rewrite .Rproj.user/F2A0B8DA/console06/INDEX001 (100%)
+ create mode 100644 .Rproj.user/F2A0B8DA/sources/prop/FE8A1599
+ delete mode 100644 .Rproj.user/F2A0B8DA/sources/s-797CBE40/4EF907E7
+ create mode 100644 .Rproj.user/F2A0B8DA/sources/s-797CBE40/7275362B
+ create mode 100644 .Rproj.user/F2A0B8DA/sources/s-797CBE40/7275362B-contents
+ create mode 100644 .Rproj.user/F2A0B8DA/sources/s-797CBE40/C66A2B07-contents
+ create mode 100644 .Rproj.user/F2A0B8DA/sources/s-797CBE40/E321444
+ create mode 100644 .Rproj.user/F2A0B8DA/sources/s-797CBE40/E321444-contents
+ create mode 100644 .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/F2A0B8DA797CBE40/chunks.json
+ create mode 100644 .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json
+ create mode 100644 .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/cktxx7qggq0tt/000004.csv
+ create mode 100644 .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/csibsgvzhnbw9/000002.csv
+ create mode 100644 logistic-lasso.Rmd
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git push
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Enumerating objects: 40, done.
+Counting objects:   2% (1/40)   Counting objects:   5% (2/40)   Counting objects:   7% (3/40)   Counting objects:  10% (4/40)   Counting objects:  12% (5/40)   Counting objects:  15% (6/40)   Counting objects:  17% (7/40)   Counting objects:  20% (8/40)   Counting objects:  22% (9/40)   Counting objects:  25% (10/40)   Counting objects:  27% (11/40)   Counting objects:  30% (12/40)   Counting objects:  32% (13/40)   Counting objects:  35% (14/40)   Counting objects:  37% (15/40)   Counting objects:  40% (16/40)   Counting objects:  42% (17/40)   Counting objects:  45% (18/40)   Counting objects:  47% (19/40)   Counting objects:  50% (20/40)   Counting objects:  52% (21/40)   Counting objects:  55% (22/40)   Counting objects:  57% (23/40)   Counting objects:  60% (24/40)   Counting objects:  62% (25/40)   Counting objects:  65% (26/40)   Counting objects:  67% (27/40)   Counting objects:  70% (28/40)   Counting objects:  72% (29/40)   Counting objects:  75% (30/40)   Counting objects:  77% (31/40)   Counting objects:  80% (32/40)   Counting objects:  82% (33/40)   Counting objects:  85% (34/40)   Counting objects:  87% (35/40)   Counting objects:  90% (36/40)   Counting objects:  92% (37/40)   Counting objects:  95% (38/40)   Counting objects:  97% (39/40)   Counting objects: 100% (40/40)   Counting objects: 100% (40/40), done.
+Delta compression using up to 8 threads
+Compressing objects:   4% (1/23)   Compressing objects:   8% (2/23)   Compressing objects:  13% (3/23)   Compressing objects:  17% (4/23)   Compressing objects:  21% (5/23)   Compressing objects:  26% (6/23)   Compressing objects:  30% (7/23)   Compressing objects:  34% (8/23)   Compressing objects:  39% (9/23)   Compressing objects:  43% (10/23)   Compressing objects:  47% (11/23)   Compressing objects:  52% (12/23)   Compressing objects:  56% (13/23)   Compressing objects:  60% (14/23)   Compressing objects:  65% (15/23)   Compressing objects:  69% (16/23)   Compressing objects:  73% (17/23)   Compressing objects:  78% (18/23)   Compressing objects:  82% (19/23)   Compressing objects:  86% (20/23)   Compressing objects:  91% (21/23)   Compressing objects:  95% (22/23)   Compressing objects: 100% (23/23)   Compressing objects: 100% (23/23), done.
+Writing objects:   3% (1/28)   Writing objects:   7% (2/28)   Writing objects:  10% (3/28)   Writing objects:  14% (4/28)   Writing objects:  17% (5/28)   Writing objects:  21% (6/28)   Writing objects:  25% (7/28)   Writing objects:  28% (8/28)   Writing objects:  32% (9/28)   Writing objects:  35% (10/28)   Writing objects:  39% (11/28)   Writing objects:  42% (12/28)   Writing objects:  46% (13/28)   Writing objects:  50% (14/28)   Writing objects:  53% (15/28)   Writing objects:  57% (16/28)   Writing objects:  60% (17/28)   Writing objects:  64% (18/28)   Writing objects:  67% (19/28)   Writing objects:  71% (20/28)   Writing objects:  75% (21/28)   Writing objects:  78% (22/28)   Writing objects:  82% (23/28)   Writing objects:  85% (24/28)   Writing objects:  89% (25/28)   Writing objects:  92% (26/28)   Writing objects:  96% (27/28)   Writing objects: 100% (28/28)   Writing objects: 100% (28/28), 6.31 KiB | 119.00 KiB/s, done.
+Total 28 (delta 2), reused 0 (delta 0)
+remote: Resolving deltas:   0% (0/2)   [Kremote: Resolving deltas:  50% (1/2)   [Kremote: Resolving deltas: 100% (2/2)   [Kremote: Resolving deltas: 100% (2/2), completed with 2 local objects.[K
+To github.com:thecbp/P8160_optimization_project.git
+   38b775c..798ddbe  master -> master
+]0;~/Documents/columbia/S2019/Computing/project/Optimization[?1034hChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rhistory[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/pcs/windowlayoutstate.pper[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/4EF907E7-contents[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/7275362B[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/7275362B-contents[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/C66A2B07-contents[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/E321444[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/E321444-contents[m
+	[31mdeleted:    .Rproj.user/F2A0B8DA/sources/s-797CBE40/lock_file[m
+	[31mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/F2A0B8DA797CBE40/chunks.json[m
+	[31mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[31mdeleted:    .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/cktxx7qggq0tt/000004.csv[m
+	[31mdeleted:    .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/csibsgvzhnbw9/000002.csv[m
+	[31mmodified:   logistic-lasso.Rmd[m
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	[31m.gitignore[m
+	[31mlogistic-lasso.html[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add.[K .
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git pull
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Already up to date.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ CBPhy[K[K[K[K[Kgit comit[K[Kmit -am ""I"m"p"l"e"m"e"n"t"e"d" "f"i"r"s"t" [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C ""v"e"r"s"i"o"n" "o"f" "L"o"g"i"s"t"i"c" "L"A"S"S"O" "[1P" "w"i"t"h" "C"D"
