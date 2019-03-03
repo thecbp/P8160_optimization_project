@@ -133,11 +133,8 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
                                  gamma = lambda) / sum(omega * X[,k]^2)  
       }
       
-      # keep the old log-likelihood for convergence check
-      old.log.lik = log.lik
-      
+      # Keep previous betas for convergence check
       old.beta0 = beta0
-      
       
       # With new betas, recalculate the working parameters
       beta0 = sum(y - X %*% beta) / n
@@ -165,7 +162,9 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   }
 ```
 
-```{r cancer-fit }
+# Make sure that the algorithm works
+
+```{r cancer-fit-test }
 X = data %>% select(radius_mean:fractal_dimension_worst) %>% as.matrix(.)
 y = data$diagnosis
 
@@ -177,17 +176,28 @@ lambda = 0.1
 cancer.CD = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda)
 ```
 
-```{r model-viz }
-tidy.cancer = cancer.CD$path %>% 
-  gather(., key = "covariate", value = "coeff_est", V1:V30)
+```{r lambda-optimization }
+lambda0 = max(coeffs)
+lambda.seq = seq(from = 1e-4, to = lambda0, length.out = 100)
 
-ggplot(data = tidy.cancer, aes(x = iter, y = coeff_est, 
-                               color = covariate, group = covariate)) +
-  geom_line() +
-  theme(legend.position = "none") +
-  labs(
-    title = "Log-LASSO coefficient estimates through iteration",
-    x = "Iteration Cycle",
-    y = "Coefficient Estimate"
-  )
+coeff.path = NULL
+for (l in 1:length(lambda.seq)) {
+  fit = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda.seq[l])
+  coeff.path = rbind(coeff.path,
+                     c(lambda = lambda.seq[l], 
+                     fit$coefficients))
+  print(paste("Iter", l, "done", sep = " "))
+}
 ```
+
+```{r lambda-viz }
+colnames(coeff.path) = c("lambda", paste("V", 1:31, sep = ""))
+tidy.lambda = as.tibble(coeff.path) %>% 
+  gather(., key = "coeff", value = "coeff_est", V1:V31) 
+
+ggplot(data = subset(tidy.lambda, lambda < 0.1), aes(x = lambda, y = coeff_est, 
+                               color = coeff, group = coeff)) +
+  geom_line() 
+```
+
+
