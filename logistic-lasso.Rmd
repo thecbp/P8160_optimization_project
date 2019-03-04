@@ -84,8 +84,8 @@ calc.working.weights = function(p) {
   return(p * (1 - p))
 }
 
-calc.log.lik = function(data, weights, w.resp, intercept, betas, lambda) {
-  # return the log-likelihood of data and current params
+calc.obj = function(data, weights, w.resp, intercept, betas, lambda) {
+  # return the objective function of data and current params
   return(
     log.lik = 1/(2 * nrow(data)) * 
       sum((weights * (w.resp - intercept * rep(1, nrow(data)) - data %*% betas))^2) + lambda * sum(abs(betas))
@@ -108,50 +108,45 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   # Turn the betas into their own matrix
   X = as.matrix(X)
   beta = as.matrix(beta)
-  n = length(y)
   
   # Initialize important parameters before starting the coordinate descent
-  beta0 = sum(y - X %*% beta) / n
+  beta0 = 1/length(y) * sum(y - X %*% beta)
   p = calc.cur.p(intercept = beta0, data = X, betas = beta)
   z = calc.working.resp(intercept = beta0, data = X, resp = y, 
                         betas = beta, p = p)
   omega = calc.working.weights(p)
-  log.lik = calc.log.lik(data = X, weights = omega, w.resp = z,
-                         intercept = beta0, betas = beta, lambda = lambda)
+  obj = calc.obj(data = X, weights = omega, w.resp = z,
+                 intercept = beta0, betas = beta, lambda = lambda)
 
   # Initialize the row for tracking each of these parameters
-  path = c(iter = 0, intercept = beta0, beta, log.lik = log.lik)
+  path = c(iter = 0, intercept = beta0, beta, obj = obj)
     
     for (j in 1:maxiter) {
       
-      old.beta = beta
+      prev.beta = beta
+
       # Coordinate descent
       for (k in 1:length(beta)) {
-        diff.y = (X %*% beta) - (X[,-k] %*% beta[-k])
-        threshold.prior = sum(omega * X[,k] * diff.y)
-        beta[k] = soft.threshold(threshold.prior, 
-                                 gamma = lambda) / sum(omega * X[,k]^2)  
+        r = y - (X %*% beta) + (X[,k] * beta[k])
+        threshold.val = sum(omega * X[,k] * r)
+        beta[k] = (soft.threshold(threshold.val, gamma = lambda)) / sum(omega * X[,k]^2)  
       }
       
-      # Keep previous betas for convergence check
-      old.beta0 = beta0
-      
       # With new betas, recalculate the working parameters
-      beta0 = sum(y - X %*% beta) / n
+      beta0 = mean(y) - sum(colMeans(X) * beta)
       p = calc.cur.p(intercept = beta0, data = X, betas = beta)
       z = calc.working.resp(intercept = beta0, data = X, resp = y, 
                         betas = beta, p = p)
       omega = calc.working.weights(p)
-      log.lik = calc.log.lik(data = X, weights = omega, w.resp = z,
-                         intercept = beta0, betas = beta, lambda = lambda)
-      
+      obj = calc.obj(data = X, weights = omega, w.resp = z,
+                     intercept = beta0, betas = beta, lambda = lambda)
+
       # Append it to tracking matrix
-      path = rbind(path, 
-                   c(iter = j, intercept = beta0, beta, log.lik = log.lik))
+      path = rbind(path, c(iter = j, intercept = beta0, beta, obj = obj))
       
       # Break the loop if the diff between likelihoods is below tolerance
       if (
-        norm(rbind(beta0, beta) - rbind(old.beta0, old.beta), "F") < tol
+        norm(prev.beta - beta, "F") < tol
         ) { break } 
     } 
   
@@ -169,23 +164,22 @@ X = data %>% select(radius_mean:fractal_dimension_worst) %>% as.matrix(.)
 y = data$diagnosis
 
 # initial guess will be what is produced by regular linear regression
-beta = lm(diagnosis ~ ., data = data)
-coeffs = as.matrix(beta$coefficients[2:length(beta$coefficients)])
-lambda = 0.1
+ls.beta = lm(diagnosis ~ ., data = data)
+ls.coeffs = as.matrix(ls.beta$coefficients[2:length(ls.beta$coefficients)])
+lambda = 0.12
 
-cancer.CD = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda)
+cancer.CD = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda, tol = 1e-4)
+dim(cancer.CD$path)
 ```
 
 ```{r lambda-optimization }
 lambda0 = max(coeffs)
-lambda.seq = seq(from = 1e-4, to = lambda0, length.out = 100)
+lambda.seq = exp(seq(-10, lambda0, length = 100))
 
 coeff.path = NULL
 for (l in 1:length(lambda.seq)) {
   fit = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda.seq[l])
-  coeff.path = rbind(coeff.path,
-                     c(lambda = lambda.seq[l], 
-                     fit$coefficients))
+  coeff.path = rbind(coeff.path, c(lambda = lambda.seq[l], fit$coefficients))
   print(paste("Iter", l, "done", sep = " "))
 }
 ```
@@ -193,11 +187,13 @@ for (l in 1:length(lambda.seq)) {
 ```{r lambda-viz }
 colnames(coeff.path) = c("lambda", paste("V", 1:31, sep = ""))
 tidy.lambda = as.tibble(coeff.path) %>% 
-  gather(., key = "coeff", value = "coeff_est", V1:V31) 
+  gather(., key = "coeff", value = "coeff_est", V1:V31) %>% 
+  mutate(
+    log.lambda = log(lambda)
+  )
 
-ggplot(data = subset(tidy.lambda, lambda < 0.1), aes(x = lambda, y = coeff_est, 
-                               color = coeff, group = coeff)) +
-  geom_line() 
+ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, group = coeff)) +
+  geom_line(alpha = 0.5) +
+  theme(legend.position = "none")
 ```
-
 
