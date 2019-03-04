@@ -9,7 +9,7 @@ Goal: Build a logistic-LASSO model to select features, and impletement the pathw
 
 ```{r setup, message = FALSE }
 library(tidyverse)
-library(glmnet)
+library(modelr)
 ```
 
 ## Important Equations
@@ -44,13 +44,20 @@ standardize = function(col) {
 
 # just standardize the covariates
 standardized.data = read.csv(file = "breast-cancer-1.csv") %>% 
-  select(radius_mean:fractal_dimension_worst) %>% 
+  dplyr::select(radius_mean:fractal_dimension_worst) %>% 
   map_df(.x = ., standardize)
 
 # add back in the response and ids
-data = cbind(read.csv(file = "breast-cancer-1.csv") %>% select(diagnosis), standardized.data) %>% 
+data = cbind(read.csv(file = "breast-cancer-1.csv") %>% dplyr::select(diagnosis), standardized.data) %>% 
   mutate(diagnosis = ifelse(diagnosis == "M", 1, 0))
 ```
+
+```{r}
+folds = crossv_kfold(data, k = 5)
+a = folds[1,1][[1]][["1"]]$data
+b = folds[2,1][[1]][["2"]]$data
+```
+
 
 ```{r helper-functions }
 soft.threshold = function(beta, gamma) {
@@ -160,7 +167,7 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
 # Make sure that the algorithm works
 
 ```{r cancer-fit-test }
-X = data %>% select(radius_mean:fractal_dimension_worst) %>% as.matrix(.)
+X = data %>% dplyr::select(radius_mean:fractal_dimension_worst) 
 y = data$diagnosis
 
 # initial guess will be what is produced by regular linear regression
@@ -169,18 +176,19 @@ ls.coeffs = as.matrix(ls.beta$coefficients[2:length(ls.beta$coefficients)])
 lambda = 0.12
 
 cancer.CD = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda, tol = 1e-4)
-dim(cancer.CD$path)
 ```
 
 ```{r lambda-optimization }
+# Generate data to visualize how the coefficients change with the logistic LASSO
 lambda0 = max(coeffs)
-lambda.seq = exp(seq(-10, lambda0, length = 100))
+lambda.seq = exp(seq(-5, lambda0, length = 100))
 
 coeff.path = NULL
 for (l in 1:length(lambda.seq)) {
   fit = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda.seq[l])
   coeff.path = rbind(coeff.path, c(lambda = lambda.seq[l], fit$coefficients))
-  print(paste("Iter", l, "done", sep = " "))
+  
+  print(paste("Iter", l, "done", sep = " ")) # progress bar
 }
 ```
 
@@ -196,4 +204,56 @@ ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, gro
   geom_line(alpha = 0.5) +
   theme(legend.position = "none")
 ```
+
+```{r 5-fold-cv }
+set.seed(8160)
+# lambdas to cross-validate against
+beta = lm(diagnosis ~ ., data = data)
+ls.coeffs = beta$coefficients[2:length(ls.beta$coefficients)]
+lambda0 = max(ls.coeffs) # previously calculated as max of the LS betas
+lambda.seq = exp(seq(-5, lambda0, length = 3))
+avg.rmses = NULL
+
+for (l in 1:lambda.seq) {
+  folds = crossv_kfold(data, k = 5)
+  
+  rmses = NULL
+  for (k in 1:nrow(folds)) {
+    
+    train = folds[k,1][[1]][[toString(k)]]$data
+    X = train %>% dplyr::select(radius_mean:fractal_dimension_worst)
+    y = train$diagnosis
+    
+    test = folds[k,2][[1]][[toString(k)]]$data
+    test.X = test %>% dplyr::select(radius_mean:fractal_dimension_worst)
+    test.y = test$diagnosis
+
+    LogLASSO = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda.seq[l])
+    LL.coefs = LogLASSO$coefficients
+
+    rmse = sum(sqrt((test.y - as.matrix(cbind(1 * rep(1, nrow(test.X)), test.X)) %*% LL.coefs)^2))
+    rmses = cbind(rmses, rmse)
+    
+  }
+  avg.rmses = cbind(avg.rmses, mean(rmses))
+  print(paste("iter", l, "done"))
+}
+```
+
+```{r}
+plot.lambda = tibble(
+  lambdas = lambda.seq,
+  avg.test.MSE = c(avg.mses)
+)
+
+ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
+  geom_point() +
+  labs(
+    title = "Average test MSE as a function of log(lambda)",
+    x = "log(lambda)",
+    y = "Average Test MSE"
+  )
+```
+
+
 

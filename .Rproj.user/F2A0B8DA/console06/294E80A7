@@ -186,3 +186,37 @@ no changes added to commit (use "git add" and/or "git commit -a")
 Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
 Already up to date.
 ]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commit -am "Fixed the algorithm[K[K[K[K[K[K[K[K[KLogistic LASSO bu t [K[Kg that made all[K[K[K90% of the covariates go to zero[1P[1@5[1@;[1@9[1@C[1P[1P[1P[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C"
+[master d6a908b] Fixed the Logistic LASSO bug that made 95% of the covariates go to zero
+ 11 files changed, 601 insertions(+), 91 deletions(-)
+ rewrite .Rhistory (98%)
+ rewrite .Rproj.user/F2A0B8DA/console06/INDEX001 (100%)
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ gt[Kit push
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Enumerating objects: 47, done.
+Counting objects:   2% (1/47)   Counting objects:   4% (2/47)   Counting objects:   6% (3/47)   Counting objects:   8% (4/47)   Counting objects:  10% (5/47)   Counting objects:  12% (6/47)   Counting objects:  14% (7/47)   Counting objects:  17% (8/47)   Counting objects:  19% (9/47)   Counting objects:  21% (10/47)   Counting objects:  23% (11/47)   Counting objects:  25% (12/47)   Counting objects:  27% (13/47)   Counting objects:  29% (14/47)   Counting objects:  31% (15/47)   Counting objects:  34% (16/47)   Counting objects:  36% (17/47)   Counting objects:  38% (18/47)   Counting objects:  40% (19/47)   Counting objects:  42% (20/47)   Counting objects:  44% (21/47)   Counting objects:  46% (22/47)   Counting objects:  48% (23/47)   Counting objects:  51% (24/47)   Counting objects:  53% (25/47)   Counting objects:  55% (26/47)   Counting objects:  57% (27/47)   Counting objects:  59% (28/47)   Counting objects:  61% (29/47)   Counting objects:  63% (30/47)   Counting objects:  65% (31/47)   Counting objects:  68% (32/47)   Counting objects:  70% (33/47)   Counting objects:  72% (34/47)   Counting objects:  74% (35/47)   Counting objects:  76% (36/47)   Counting objects:  78% (37/47)   Counting objects:  80% (38/47)   Counting objects:  82% (39/47)   Counting objects:  85% (40/47)   Counting objects:  87% (41/47)   Counting objects:  89% (42/47)   Counting objects:  91% (43/47)   Counting objects:  93% (44/47)   Counting objects:  95% (45/47)   Counting objects:  97% (46/47)   Counting objects: 100% (47/47)   Counting objects: 100% (47/47), done.
+Delta compression using up to 8 threads
+Compressing objects:   5% (1/20)   Compressing objects:  10% (2/20)   Compressing objects:  15% (3/20)   Compressing objects:  20% (4/20)   Compressing objects:  25% (5/20)   Compressing objects:  30% (6/20)   Compressing objects:  35% (7/20)   Compressing objects:  40% (8/20)   Compressing objects:  45% (9/20)   Compressing objects:  50% (10/20)   Compressing objects:  55% (11/20)   Compressing objects:  60% (12/20)   Compressing objects:  65% (13/20)   Compressing objects:  70% (14/20)   Compressing objects:  75% (15/20)   Compressing objects:  80% (16/20)   Compressing objects:  85% (17/20)   Compressing objects:  90% (18/20)   Compressing objects:  95% (19/20)   Compressing objects: 100% (20/20)   Compressing objects: 100% (20/20), done.
+Writing objects:   4% (1/24)   Writing objects:   8% (2/24)   Writing objects:  12% (3/24)   Writing objects:  16% (4/24)   Writing objects:  20% (5/24)   Writing objects:  25% (6/24)   Writing objects:  29% (7/24)   Writing objects:  33% (8/24)   Writing objects:  37% (9/24)   Writing objects:  41% (10/24)   Writing objects:  45% (11/24)   Writing objects:  50% (12/24)   Writing objects:  54% (13/24)   Writing objects:  58% (14/24)   Writing objects:  62% (15/24)   Writing objects:  66% (16/24)   Writing objects:  70% (17/24)   Writing objects:  75% (18/24)   Writing objects:  79% (19/24)   Writing objects:  83% (20/24)   Writing objects:  87% (21/24)   Writing objects:  91% (22/24)   Writing objects:  95% (23/24)   Writing objects: 100% (24/24)   Writing objects: 100% (24/24), 5.20 KiB | 98.00 KiB/s, done.
+Total 24 (delta 11), reused 0 (delta 0)
+remote: Resolving deltas:   0% (0/11)   [Kremote: Resolving deltas:   9% (1/11)   [Kremote: Resolving deltas:  18% (2/11)   [Kremote: Resolving deltas:  27% (3/11)   [Kremote: Resolving deltas:  36% (4/11)   [Kremote: Resolving deltas:  45% (5/11)   [Kremote: Resolving deltas:  54% (6/11)   [Kremote: Resolving deltas:  63% (7/11)   [Kremote: Resolving deltas:  72% (8/11)   [Kremote: Resolving deltas:  81% (9/11)   [Kremote: Resolving deltas:  90% (10/11)   [Kremote: Resolving deltas: 100% (11/11)   [Kremote: Resolving deltas: 100% (11/11), completed with 11 local objects.[K
+To github.com:thecbp/P8160_optimization_project.git
+   2239675..d6a908b  master -> master
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ [KChristians-MacBook-Pro-2:Optimization christianpascual$ [KChristians-MacBook-Pro-2:Optimization christianpascual$ [KChristians-MacBook-Pro-2:Optimization christianpascual$ [KChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/INDEX[m
+	[31mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[31mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[31mmodified:   logistic-lasso.Rmd[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commit[K[K[K[K[K[Kcommit -am "Added in algr[Korithm for 5-fl[Kold cros[K[K[K[KCV; n eed t [K[K[K[K[K[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K[K[KV"
