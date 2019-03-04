@@ -10,6 +10,7 @@ Goal: Build a logistic-LASSO model to select features, and impletement the pathw
 ```{r setup, message = FALSE }
 library(tidyverse)
 library(modelr)
+library(caret)
 ```
 
 ## Important Equations
@@ -51,13 +52,6 @@ standardized.data = read.csv(file = "breast-cancer-1.csv") %>%
 data = cbind(read.csv(file = "breast-cancer-1.csv") %>% dplyr::select(diagnosis), standardized.data) %>% 
   mutate(diagnosis = ifelse(diagnosis == "M", 1, 0))
 ```
-
-```{r}
-folds = crossv_kfold(data, k = 5)
-a = folds[1,1][[1]][["1"]]$data
-b = folds[2,1][[1]][["2"]]$data
-```
-
 
 ```{r helper-functions }
 soft.threshold = function(beta, gamma) {
@@ -175,7 +169,7 @@ ls.beta = lm(diagnosis ~ ., data = data)
 ls.coeffs = as.matrix(ls.beta$coefficients[2:length(ls.beta$coefficients)])
 lambda = 0.12
 
-cancer.CD = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda, tol = 1e-4)
+#cancer.CD = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda, tol = 1e-4)
 ```
 
 ```{r lambda-optimization }
@@ -211,43 +205,40 @@ set.seed(8160)
 beta = lm(diagnosis ~ ., data = data)
 ls.coeffs = beta$coefficients[2:length(ls.beta$coefficients)]
 lambda0 = max(ls.coeffs) # previously calculated as max of the LS betas
-lambda.seq = exp(seq(-5, lambda0, length = 3))
+lambda.seq = exp(seq(-5, lambda0, length = 100))
 avg.rmses = NULL
 
-for (l in 1:lambda.seq) {
-  folds = crossv_kfold(data, k = 5)
-  
+# Set up the datasets for cross-validation
+folds = crossv_kfold(data, k = 5)
+train.idx = folds[k,1][[1]][[toString(k)]]$idx
+train = data[train.idx,]
+train.X = train %>% dplyr::select(radius_mean:fractal_dimension_worst)
+train.y = train$diagnosis
+test = data[-train.idx,]
+test.X = test %>% dplyr::select(radius_mean:fractal_dimension_worst)
+test.y = test$diagnosis
+
+for (l in lambda.seq) {
   rmses = NULL
   for (k in 1:nrow(folds)) {
-    
-    train = folds[k,1][[1]][[toString(k)]]$data
-    X = train %>% dplyr::select(radius_mean:fractal_dimension_worst)
-    y = train$diagnosis
-    
-    test = folds[k,2][[1]][[toString(k)]]$data
-    test.X = test %>% dplyr::select(radius_mean:fractal_dimension_worst)
-    test.y = test$diagnosis
-
-    LogLASSO = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda.seq[l])
+    LogLASSO = LogLASSO.CD(X = train.X, y = train.y, beta = ls.coeffs, lambda = l)
     LL.coefs = LogLASSO$coefficients
-
     rmse = sum(sqrt((test.y - as.matrix(cbind(1 * rep(1, nrow(test.X)), test.X)) %*% LL.coefs)^2))
     rmses = cbind(rmses, rmse)
-    
   }
   avg.rmses = cbind(avg.rmses, mean(rmses))
-  print(paste("iter", l, "done"))
+  print(paste("iter: lambda = ", l, "done"))
 }
 ```
 
 ```{r}
 plot.lambda = tibble(
   lambdas = lambda.seq,
-  avg.test.MSE = c(avg.mses)
+  avg.test.MSE = c(avg.rmses)
 )
 
 ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
-  geom_point() +
+  geom_line() +
   labs(
     title = "Average test MSE as a function of log(lambda)",
     x = "log(lambda)",
@@ -255,5 +246,9 @@ ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
   )
 ```
 
+```{r optimal-lambda }
+min.RMSE = min(plot.lambda$avg.test.MSE)
+min.lambda = plot.lambda[which(plot.lambda$avg.test.MSE == min.RMSE),]$lambdas
+```
 
-
+After performing the 5-fold cross-validation, it seems that a $\lambda$ of `r min.lambda` minimizes the test RMSE.
