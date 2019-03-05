@@ -251,3 +251,89 @@ Changes not staged for commit:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 ]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git pull[K[K[K[Kcommit -am "Finished the 5-fold CV algorithm a nd visualization"
+[master a1ad905] Finished the 5-fold CV algorithm and visualization
+ 5 files changed, 60 insertions(+), 34 deletions(-)
+ rewrite .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json (83%)
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git push
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Enumerating objects: 33, done.
+Counting objects:   3% (1/33)   Counting objects:   6% (2/33)   Counting objects:   9% (3/33)   Counting objects:  12% (4/33)   Counting objects:  15% (5/33)   Counting objects:  18% (6/33)   Counting objects:  21% (7/33)   Counting objects:  24% (8/33)   Counting objects:  27% (9/33)   Counting objects:  30% (10/33)   Counting objects:  33% (11/33)   Counting objects:  36% (12/33)   Counting objects:  39% (13/33)   Counting objects:  42% (14/33)   Counting objects:  45% (15/33)   Counting objects:  48% (16/33)   Counting objects:  51% (17/33)   Counting objects:  54% (18/33)   Counting objects:  57% (19/33)   Counting objects:  60% (20/33)   Counting objects:  63% (21/33)   Counting objects:  66% (22/33)   Counting objects:  69% (23/33)   Counting objects:  72% (24/33)   Counting objects:  75% (25/33)   Counting objects:  78% (26/33)   Counting objects:  81% (27/33)   Counting objects:  84% (28/33)   Counting objects:  87% (29/33)   Counting objects:  90% (30/33)   Counting objects:  93% (31/33)   Counting objects:  96% (32/33)   Counting objects: 100% (33/33)   Counting objects: 100% (33/33), done.
+Delta compression using up to 8 threads
+Compressing objects:   7% (1/13)   Compressing objects:  15% (2/13)   Compressing objects:  23% (3/13)   Compressing objects:  30% (4/13)   Compressing objects:  38% (5/13)   Compressing objects:  46% (6/13)   Compressing objects:  53% (7/13)   Compressing objects:  61% (8/13)   Compressing objects:  69% (9/13)   Compressing objects:  76% (10/13)   Compressing objects:  84% (11/13)   Compressing objects:  92% (12/13)   Compressing objects: 100% (13/13)   Compressing objects: 100% (13/13), done.
+Writing objects:   5% (1/17)   Writing objects:  11% (2/17)   Writing objects:  17% (3/17)   Writing objects:  23% (4/17)   Writing objects:  29% (5/17)   Writing objects:  35% (6/17)   Writing objects:  41% (7/17)   Writing objects:  47% (8/17)   Writing objects:  52% (9/17)   Writing objects:  58% (10/17)   Writing objects:  64% (11/17)   Writing objects:  70% (12/17)   Writing objects:  76% (13/17)   Writing objects:  82% (14/17)   Writing objects:  88% (15/17)   Writing objects:  94% (16/17)   Writing objects: 100% (17/17)   Writing objects: 100% (17/17), 2.59 KiB | 50.00 KiB/s, done.
+Total 17 (delta 7), reused 0 (delta 0)
+remote: Resolving deltas:   0% (0/7)   [Kremote: Resolving deltas:  14% (1/7)   [Kremote: Resolving deltas:  28% (2/7)   [Kremote: Resolving deltas:  42% (3/7)   [Kremote: Resolving deltas:  57% (4/7)   [Kremote: Resolving deltas:  71% (5/7)   [Kremote: Resolving deltas:  85% (6/7)   [Kremote: Resolving deltas: 100% (7/7)   [Kremote: Resolving deltas: 100% (7/7), completed with 7 local objects.[K
+To github.com:thecbp/P8160_optimization_project.git
+   9a6da82..a1ad905  master -> master
+]0;~/Documents/columbia/S2019/Computing/project/Optimization[?1034hChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rhistory[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/pcs/source-pane.pper[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/pcs/windowlayoutstate.pper[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/pcs/workbench-pane.pper[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/rmd-outputs[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[31mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[31mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[31mmodified:   logistic-lasso.Rmd[m
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	[31mcoeff-estimates.png[m
+	[31mlambda-cv.png[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add .
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ gt [K[Kit pull
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+remote: Enumerating objects: 13, done.[K
+remote: Counting objects:   7% (1/13)   [Kremote: Counting objects:  15% (2/13)   [Kremote: Counting objects:  23% (3/13)   [Kremote: Counting objects:  30% (4/13)   [Kremote: Counting objects:  38% (5/13)   [Kremote: Counting objects:  46% (6/13)   [Kremote: Counting objects:  53% (7/13)   [Kremote: Counting objects:  61% (8/13)   [Kremote: Counting objects:  69% (9/13)   [Kremote: Counting objects:  76% (10/13)   [Kremote: Counting objects:  84% (11/13)   [Kremote: Counting objects:  92% (12/13)   [Kremote: Counting objects: 100% (13/13)   [Kremote: Counting objects: 100% (13/13), done.[K
+remote: Compressing objects:  20% (1/5)   [Kremote: Compressing objects:  40% (2/5)   [Kremote: Compressing objects:  60% (3/5)   [Kremote: Compressing objects:  80% (4/5)   [Kremote: Compressing objects: 100% (5/5)   [Kremote: Compressing objects: 100% (5/5), done.[K
+Unpacking objects:  12% (1/8)   Unpacking objects:  25% (2/8)   Unpacking objects:  37% (3/8)   Unpacking objects:  50% (4/8)   Unpacking objects:  62% (5/8)   Unpacking objects:  75% (6/8)   Unpacking objects:  87% (7/8)   remote: Total 8 (delta 2), reused 8 (delta 2), pack-reused 0[K
+Unpacking objects: 100% (8/8)   Unpacking objects: 100% (8/8), done.
+From github.com:thecbp/P8160_optimization_project
+   a1ad905..01149bf  master     -> origin/master
+Updating a1ad905..01149bf
+error: Your local changes to the following files would be overwritten by merge:
+	.Rproj.user/shared/notebooks/paths
+Please commit your changes or stash them before you merge.
+Aborting
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch is behind 'origin/master' by 1 commit, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+	[32mmodified:   .Rhistory[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/pcs/source-pane.pper[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/pcs/windowlayoutstate.pper[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/pcs/workbench-pane.pper[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/rmd-outputs[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[32mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[32mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[32mnew file:   coeff-estimates.png[m
+	[32mnew file:   lambda-cv.png[m
+	[32mmodified:   logistic-lasso.Rmd[m
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7.env[m
+
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ gt[K[Kgit add .

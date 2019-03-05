@@ -9,6 +9,7 @@ Goal: Build a logistic-LASSO model to select features, and impletement the pathw
 
 ```{r setup, message = FALSE }
 library(tidyverse)
+library(glmnet)
 library(modelr)
 library(caret)
 ```
@@ -166,10 +167,10 @@ y = data$diagnosis
 
 # initial guess will be what is produced by regular linear regression
 ls.beta = lm(diagnosis ~ ., data = data)
-ls.coeffs = as.matrix(ls.beta$coefficients[2:length(ls.beta$coefficients)])
+coeffs = as.matrix(ls.beta$coefficients[2:length(ls.beta$coefficients)])
 lambda = 0.12
 
-#cancer.CD = LogLASSO.CD(X = X, y = y, beta = ls.coeffs, lambda = lambda, tol = 1e-4)
+cancer.CD = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda, tol = 1e-4)
 ```
 
 ```{r lambda-optimization }
@@ -196,7 +197,12 @@ tidy.lambda = as.tibble(coeff.path) %>%
 
 ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, group = coeff)) +
   geom_line(alpha = 0.5) +
-  theme(legend.position = "none")
+  theme(legend.position = "right") +
+  labs(
+    title = "Log-LASSO Coefficient estimates as a function of log(lambda)",
+    x = "log(lambda)",
+    y = "Coefficient estimate"
+  )
 ```
 
 ```{r 5-fold-cv }
