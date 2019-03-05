@@ -1,0 +1,121 @@
+---
+title: "question 2"
+author: "xinyi Lin"
+date: "2/28/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+cancer_data = read_csv("./breast-cancer-1.csv")
+```
+
+## classical Newton Raphson
+
+```{r}
+logisticstuff <- function(x, y, betavec) {
+  u <- x %*% betavec[1:31]
+  expu <- exp(u)
+  loglik = vector(mode = "numeric", 569)
+  for(i in 1:569)
+    loglik[i] = y[i]*u[i] - log(1 + expu[i])
+  loglik_value = sum(loglik)
+  # Log-likelihood at betavec
+  p <- expu / (1 + expu)
+  # P(Y_i=1|x_i)
+  grad = vector(mode = "numeric", 31)
+  #grad[1] = sum(y - p)
+  for(i in 1:31)
+    grad[i] = sum(t(x[,i])%*%(y - p))
+  Hess <- -t(x)%*%p%*%t(1-p)%*%x
+  # gradient at betavec
+  #unit_vec = vector(mode = "numeric", 32)
+  #unit_vec[1] = sum(t(p)%*%(1-p))
+  #for (j in 2:31){
+    #unit_vec[j] = sum(x[,j-1]*p*(1-p)) 
+  #}
+  #Hess = unit_vec
+  #for(i in 2:31){
+    #Hess = rbind(Hess, x[,i-1]%*%unit_vec)
+  #}
+# Hessian at betavec
+  return(list(loglik = loglik, grad = grad, Hess = Hess))
+}
+```
+
+Newton-Raphson process
+
+```{r}
+NewtonRaphson <- function(x, y, logisticstuff, start, tol=1e-10, maxiter = 200) {
+  i <- 0
+  cur <- start
+  stuff <- logisticstuff(x, y, cur)
+  res <- c(0, stuff$loglik, cur)
+  prevloglik <- -Inf      # To make sure it iterates
+  #while(i < maxiter && abs(stuff$loglik - prevloglik) > tol && stuff$loglik > -Inf)
+  while(i < maxiter && abs(stuff$loglik - prevloglik) > tol)
+ {
+    i <- i + 1
+    prevloglik <- stuff$loglik
+    prev <- cur
+    cur <- prev - solve(stuff$Hess) %*% stuff$grad
+    stuff <- logisticstuff(x, y, cur)        # log-lik, gradient, Hessian
+    res <- rbind(res, c(i, stuff$loglik, cur))
+    # Add current values to results matrix
+}
+  return(res)
+}
+```
+
+Using data to get answer
+
+```{r}
+intercept = rep(1, 569)
+central = function(x){
+  x = (x-mean(x))/sd(x)
+  return(x)
+}
+x = cancer_data[,3:32] %>% 
+  apply(2, central) %>% 
+  cbind(intercept, .) %>% 
+  as.matrix()
+#colnames(x) = NULL
+y = as.vector(ifelse(cancer_data$diagnosis=="M",1,0))  # response variables
+beta = rep(1,31)
+#ans1 = NewtonRaphson(x, y, logisticstuff, beta)
+# Error in solve.default(stuff$Hess) : singular
+```
+
+## gradient descent
+
+```{r}
+gradient <- function(x, y, logisticstuff, start, tol=1e-5, maxiter = 200){ 
+  i <- 0 
+  cur <- start 
+  beta_len <- length(start)
+  stuff <- logisticstuff(x, y, cur) 
+  res <- c(0, stuff$loglik,cur)
+  prevloglik <- -Inf # To make sure it iterates 
+  #while(i <= maxiter && abs(stuff$loglik - prevloglik) > tol)
+  while(i <= maxiter && abs(stuff$loglik - prevloglik) > tol && stuff$loglik > -Inf) 
+    { i <- i + 1 
+    prevloglik <- stuff$loglik 
+    prev <- cur 
+    cur <- prev + (diag(beta_len)/10)%*%(stuff$grad)
+    #cur = prev + t(stuff$grad)%*%(stuff$grad)
+    stuff <- logisticstuff(x, y, cur) # log-lik, gradient, Hessian 
+    res <- rbind(res, c(i, stuff$loglik, cur))}  
+  return(round(res,2))
+}
+ans2 <- gradient(x, y, logisticstuff, beta)
+ans2
+```
+
+
+
+

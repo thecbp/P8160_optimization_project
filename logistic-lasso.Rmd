@@ -161,14 +161,26 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
 
 # Make sure that the algorithm works
 
-```{r cancer-fit-test }
+```{r param-setup }
 X = data %>% dplyr::select(radius_mean:fractal_dimension_worst) 
 y = data$diagnosis
 
-# initial guess will be what is produced by regular linear regression
 ls.beta = lm(diagnosis ~ ., data = data)
 coeffs = as.matrix(ls.beta$coefficients[2:length(ls.beta$coefficients)])
+log.fit = glm(diagnosis ~ ., family = binomial(link = "logit"), data = data,
+              control = list(maxit = 50))
+log.coeffs = log.fit$coefficients
+
+## PROBLEM: some covariates are nearly perfectly correlated with each other, so 
+## what should we consider to be the full model if we take some of these out?
+
 lambda = 0.12
+```
+
+
+```{r cancer-fit-test }
+# initial guess will be what is produced by regular linear regression
+
 
 cancer.CD = LogLASSO.CD(X = X, y = y, beta = coeffs, lambda = lambda, tol = 1e-4)
 ```

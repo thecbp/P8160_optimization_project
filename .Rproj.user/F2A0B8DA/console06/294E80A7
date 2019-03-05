@@ -337,3 +337,168 @@ Changes not staged for commit:
 	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7.env[m
 
 ]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ gt[K[Kgit add .
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ fit[K[K[Kgit pull
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Updating a1ad905..01149bf
+error: Your local changes to the following files would be overwritten by merge:
+	.Rproj.user/shared/notebooks/paths
+Please commit your changes or stash them before you merge.
+Aborting
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commit -m "ADded [K[K[K[K[Kdded images"
+[master 4deabfd] Added images
+ 14 files changed, 624 insertions(+), 532 deletions(-)
+ rewrite .Rhistory (81%)
+ rewrite .Rproj.user/F2A0B8DA/console06/INDEX001 (87%)
+ create mode 100644 coeff-estimates.png
+ create mode 100644 lambda-cv.png
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git pus[K[Kull
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Auto-merging .Rproj.user/shared/notebooks/paths
+CONFLICT (content): Merge conflict in .Rproj.user/shared/notebooks/paths
+Automatic merge failed; fix conflicts and then commit the result.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ corr(data
+bash: syntax error near unexpected token `data'
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ corr(data)
+bash: syntax error near unexpected token `data'
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ [KChristians-MacBook-Pro-2:Optimization christianpascual$ [KChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch and 'origin/master' have diverged,
+and have 1 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+
+	[32mnew file:   P8160_optimization_project.Rproj[m
+	[32mnew file:   question_2.Rmd[m
+	[32mnew file:   question_2.pdf[m
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+
+	[31mboth modified:   .Rproj.user/shared/notebooks/paths[m
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/sources/prop/INDEX[m
+	[31mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[31mmodified:   logistic-lasso.Rmd[m
+
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add .
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commt [K[K[K[K[K[Kpull
+error: You have not concluded your merge (MERGE_HEAD exists).
+[33mhint: Please, commit your changes before merging.[m
+fatal: Exiting because of unfinished merge.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git [K[K[K[Kgit status
+On branch master
+Your branch and 'origin/master' have diverged,
+and have 1 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/INDEX[m
+	[32mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[32mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[32mnew file:   P8160_optimization_project.Rproj[m
+	[32mmodified:   logistic-lasso.Rmd[m
+	[32mnew file:   question_2.Rmd[m
+	[32mnew file:   question_2.pdf[m
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git abort
+git: 'abort' is not a git command. See 'git --help'.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commit[K[K[K[K[K[Kpull
+error: You have not concluded your merge (MERGE_HEAD exists).
+[33mhint: Please, commit your changes before merging.[m
+fatal: Exiting because of unfinished merge.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ gitg[K merge --abort
+error: Entry '.Rproj.user/F2A0B8DA/console06/294E80A7' not uptodate. Cannot merge.
+fatal: Could not reset index file to revision 'HEAD'.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git pull
+error: You have not concluded your merge (MERGE_HEAD exists).
+[33mhint: Please, commit your changes before merging.[m
+fatal: Exiting because of unfinished merge.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch and 'origin/master' have diverged,
+and have 1 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/INDEX[m
+	[32mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[32mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[32mnew file:   P8160_optimization_project.Rproj[m
+	[32mmodified:   logistic-lasso.Rmd[m
+	[32mnew file:   question_2.Rmd[m
+	[32mnew file:   question_2.pdf[m
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git pull
+error: You have not concluded your merge (MERGE_HEAD exists).
+[33mhint: Please, commit your changes before merging.[m
+fatal: Exiting because of unfinished merge.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git merge --abort
+error: Entry '.Rproj.user/F2A0B8DA/console06/294E80A7' not uptodate. Cannot merge.
+fatal: Could not reset index file to revision 'HEAD'.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch and 'origin/master' have diverged,
+and have 1 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/FE8A1599[m
+	[32mmodified:   .Rproj.user/F2A0B8DA/sources/prop/INDEX[m
+	[32mmodified:   .Rproj.user/shared/notebooks/D081DE1B-logistic-lasso/1/s/chunks.json[m
+	[32mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[32mnew file:   P8160_optimization_project.Rproj[m
+	[32mmodified:   logistic-lasso.Rmd[m
+	[32mnew file:   question_2.Rmd[m
+	[32mnew file:   question_2.pdf[m
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add .
