@@ -139,4 +139,12 @@ modified <- function(x, y, logisticstuff, start, tol=1e-5, maxiter = 200){
 }
 #ans2 <- modified(x, y, logisticstuff, beta, maxiter = 1000)
 #ans2
+<<<<<<< HEAD
 ```
+=======
+```
+
+
+
+
+>>>>>>> 59599854c459b775a6b6a48442d16c86a181505c
