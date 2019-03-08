@@ -1,42 +1,18 @@
 ---
-title: "CD Logistic LASSO"
+title: "Final Report Preparation"
 author: "Christian Pascual"
-date: "2/28/2019"
+date: "3/7/2019"
 output: html_document
 ---
 
-Goal: Build a logistic-LASSO model to select features, and impletement the pathwise coordinatewise optimization algorithm to obtain a path of solutions with a sequence of descending λ’s.
-
-```{r setup, message = FALSE }
+```{r setup }
 library(tidyverse)
 library(glmnet)
 library(modelr)
-library(caret)
+library(matrixcalc)
 ```
 
-## Important Equations
-
-The goal of this part of the optimizaiton project is to implement logistic-LASSO regression using coordinate descent. The following are important equations for this task:
-
-Using the Taylor expansion around "current estimates" $(\beta_0, \mathbf{\beta_1})$, we get an approximation to the logistic log-likelihood:
-$$f(\beta_0, \mathbf{\beta_1}) \approx l(\beta_0, \mathbf{\beta_1}) = -\frac{1}{2n} \sum^n_{i=1} \omega_i(z_i  -\beta_0 - \mathbf{x}^T_i\mathbf{\beta_1})^2 + C(\tilde{\beta_0}, \tilde{\mathbf{\beta_1}})$$
-
-where we have the working response:
-$$z_i = \tilde{\beta_0} + \mathbf{x}^T_i\tilde{\mathbf{\beta_1}} + \frac{y_i - \tilde{p_i}(x_i)}{\tilde{p_i}(x_i)(1 - \tilde{p_i}(x_i))}$$
-
-the working weights:
-$$\omega_i = \tilde{p_i}(x_i)(1 - \tilde{p_i}(x_i))$$
-and the probability given the current parameters:
-$$\tilde{p_i}(x_i) = \frac{e^{\tilde{\beta_0} + \mathbf{x}^T_i\mathbf{\beta_1}}}{1 + e^{\tilde{\beta_0} + \mathbf{x}^T_i\mathbf{\beta_1}}}$$
-
-We thus want to minimize the following equation
-$$\mathop{min}_{(\beta_0, \mathbf{\beta_1)}} \bigg( \frac{1}{2n} \sum^n_{i=1} \omega_i(z_i  -\beta_0 - \mathbf{x}^T_i\mathbf{\beta_1})^2  + \lambda \sum^p_{j=0}|\beta_j| \bigg)$$
-
-In coordinate descent, we know that if each observation has some weight $\omega_i$ associated with it, the updated $\tilde{\beta_j}$ is given by a weighted version of the soft-thresholding function:
-$$\tilde{\beta_j} = \frac{S(\sum_i\omega_ix_{i,j}(y_i - \tilde{y}_i^{(-j)}), \gamma)}{\sum\omega_ix^2_{i,j}}$$
-
-## Standardize the data for the regularization
-
+# Data preparation
 ```{r data, message = FALSE }
 standardize = function(col) {
   mean = mean(col)
@@ -52,7 +28,42 @@ standardized.data = read.csv(file = "breast-cancer-1.csv") %>%
 # add back in the response and ids
 data = cbind(read.csv(file = "breast-cancer-1.csv") %>% dplyr::select(diagnosis), standardized.data) %>% 
   mutate(diagnosis = ifelse(diagnosis == "M", 1, 0))
+
+needed.cols = c("diagnosis", "radius_mean", "texture_mean", "perimeter_mean",
+                "smoothness_mean", "compactness_mean", "concavity_mean",
+                "concave.points_mean", "fractal_dimension_mean",
+                "symmetry_mean", "radius_se", "perimeter_se", "symmetry_se")
+
+short.data = data %>% 
+  dplyr::select(which(colnames(data) %in% needed.cols))
 ```
+
+```{r}
+# Christian's data preparation
+cbp.X = data %>% 
+  dplyr::select(radius_mean, texture_mean, perimeter_mean, smoothness_mean, 
+                compactness_mean, concavity_mean, concave.points_mean,
+                fractal_dimension_mean, symmetry_mean, radius_se, 
+                perimeter_se, symmetry_se) 
+cbp.y = data$diagnosis
+
+# Xinyi's data preparation
+xl.x = data %>% 
+  mutate(intercept = 1) %>%
+  dplyr::select(intercept, radius_mean, texture_mean, perimeter_mean,
+                smoothness_mean, compactness_mean, concavity_mean,
+                concave.points_mean, fractal_dimension_mean, symmetry_mean,
+                radius_se, perimeter_se, symmetry_se) %>% 
+  as.matrix(.)
+xl.y = as.vector(ifelse(data$diagnosis == "M", 1, 0))  
+
+# Coefficients from regular glmnet
+f = formula(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + compactness_mean + concavity_mean + concave.points_mean + fractal_dimension_mean + symmetry_mean + radius_se + perimeter_se + symmetry_se)
+
+full.fit = glm(f, family = binomial(link = "logit"), data = data)
+```
+
+# Functions needed for analysis
 
 ```{r helper-functions }
 soft.threshold = function(beta, gamma) {
@@ -109,7 +120,9 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   
   # Turn the betas into their own matrix
   X = as.matrix(X)
-  beta = as.matrix(beta)
+  
+  # exclude the intercept from the input betas
+  beta = as.matrix(beta[2:length(beta)])
   
   # Initialize important parameters before starting the coordinate descent
   beta0 = 1/length(y) * sum(y - X %*% beta)
@@ -159,39 +172,74 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   }
 ```
 
-# Make sure that the algorithm works
+```{r}
+logisticstuff <- function(x, y, betavec) {
+  # Calculating the log-likelihood
+  u <- betavec[1] + x %*% betavec[2:length(betavec)]
+  expu <- exp(u)
+  loglik_value = sum(y * u - log(1 + expu))
+  
+  # Get vector of p for each row
+  p <- expu / (1 + expu)
+  # P(Y_i=1|x_i)
+  grad = vector(mode = "numeric", length(betavec))
+  grad[1] = sum(y - p)
+  for (i in 2:length(betavec))
+    grad[i] = sum(x[,i] * (y - p))
+  #Hess <- -t(x)%*%p%*%t(1-p)%*%x
+  
+  Hess = hess_cal(x, p)
+  return(list(loglik = loglik_value, grad = grad, Hess = Hess))
+}
 
-```{r param-setup }
-X = data %>% 
-  dplyr::select(radius_mean, texture_mean, perimeter_mean, smoothness_mean, 
-                compactness_mean, concavity_mean, concave.points_mean,
-                fractal_dimension_mean, symmetry_mean, radius_se, 
-                perimeter_se, symmetry_se) 
-y = data$diagnosis
+hess_cal = function(x, p){
+  length.p = length(p)
+  hess = matrix(0, length.p, length.p)
+  for (i in 1:length.p) {
+    unit = (x[i,] %*% t(x[i,])) * p[i] * (1 - p[i])
+    #unit = t(x[i,])%*%x[i,]*p[i]*(1-p[i])
+    hess = hess + unit
+  }
+  return(-hess)
+}
 
-f = formula(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + compactness_mean + concavity_mean + concave.points_mean + fractal_dimension_mean + symmetry_mean + radius_se + perimeter_se + symmetry_se)
-full.fit = glm(f, family = binomial(link = "logit"), data = data)
-full.fit.coefs = full.fit$coefficients
-lambda = 0.55
-
-cancer.CD = LogLASSO.CD(X = X, y = y, beta = full.fit$coefficients[2:13], lambda = lambda, tol = 1e-5)
+NewtonRaphson <- function(x, y, logisticstuff, start, tol = 1e-5, maxiter = 200) {
+  i <- 0
+  cur <- start
+  stuff <- logisticstuff(x, y, cur)
+  res = c(0, cur)
+  #res <- c(0, stuff$loglik, cur)
+  prevloglik <- -Inf      # To make sure it iterates
+  #while(i < maxiter && abs(stuff$loglik - prevloglik) > tol && stuff$loglik > -Inf)
+  while (i < maxiter && abs(stuff$loglik - prevloglik) > tol){
+    i <- i + 1
+    prevloglik <- stuff$loglik
+    prev <- cur
+    cur <- prev - solve(stuff$Hess) %*% stuff$grad
+    stuff <- logisticstuff(x, y, cur)        # log-lik, gradient, Hessian
+    res = rbind(res, c(i, cur))
+    #res <- rbind(res, c(i, stuff$loglik, cur))
+    # Add current values to results matrix
+    }
+  return(res)
+}
 ```
 
+# Visualizations
+
+## betas vs lambda
 ```{r lambda-optimization }
 # Generate data to visualize how the coefficients change with the logistic LASSO
-lambda0 = max(coeffs)
-lambda.seq = exp(seq(-5, lambda0, length = 100))
+lambda.seq = exp(seq(-7, 2, length = 200))
 
 coeff.path = NULL
 for (l in 1:length(lambda.seq)) {
-  fit = LogLASSO.CD(X = X, y = y, beta = full.fit$coefficients[2:13], lambda = lambda.seq[l])
+  fit = LogLASSO.CD(X = cbp.X, y = cbp.y, beta = full.fit$coefficients, lambda = lambda.seq[l])
   coeff.path = rbind(coeff.path, c(lambda = lambda.seq[l], fit$coefficients))
   
   print(paste("Iter", l, "done", sep = " ")) # progress bar
 }
-```
 
-```{r lambda-viz }
 colnames(coeff.path) = c("lambda", paste("V", 1:13, sep = ""))
 tidy.lambda = as.tibble(coeff.path) %>% 
   gather(., key = "coeff", value = "coeff_est", V1:V13) %>% 
@@ -209,29 +257,35 @@ ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, gro
   )
 ```
 
+## Cross-validation to find the best lambda
 ```{r 5-fold-cv }
 set.seed(8160)
-# lambdas to cross-validate against
-beta = lm(diagnosis ~ ., data = data)
-ls.coeffs = beta$coefficients[2:length(ls.beta$coefficients)]
-lambda0 = max(ls.coeffs) # previously calculated as max of the LS betas
-lambda.seq = exp(seq(-5, lambda0, length = 100))
 avg.rmses = NULL
 
 # Set up the datasets for cross-validation
-folds = crossv_kfold(data, k = 5)
-train.idx = folds[k,1][[1]][[toString(k)]]$idx
-train = data[train.idx,]
-train.X = train %>% dplyr::select(radius_mean:fractal_dimension_worst)
-train.y = train$diagnosis
-test = data[-train.idx,]
-test.X = test %>% dplyr::select(radius_mean:fractal_dimension_worst)
-test.y = test$diagnosis
+folds = crossv_kfold(short.data, k = 5)
 
 for (l in lambda.seq) {
   rmses = NULL
   for (k in 1:nrow(folds)) {
-    LogLASSO = LogLASSO.CD(X = train.X, y = train.y, beta = ls.coeffs, lambda = l)
+    
+    train.idx = folds[k,1][[1]][[toString(k)]]$idx
+    
+    train = short.data[train.idx,]
+    test = short.data[-train.idx,]
+    
+    train.X = train %>% 
+      dplyr::select(which(colnames(short.data) %in% needed.cols)) %>% 
+      dplyr::select(-diagnosis)
+    train.y = train$diagnosis
+    
+    test.X = test %>% 
+      dplyr::select(which(colnames(short.data) %in% needed.cols)) %>% 
+      dplyr::select(-diagnosis)
+    test.y = test$diagnosis
+    
+    LogLASSO = LogLASSO.CD(X = train.X, y = train.y, 
+                           beta = full.fit$coefficients, lambda = l)
     LL.coefs = LogLASSO$coefficients
     rmse = sum(sqrt((test.y - as.matrix(cbind(1 * rep(1, nrow(test.X)), test.X)) %*% LL.coefs)^2))
     rmses = cbind(rmses, rmse)
@@ -239,16 +293,19 @@ for (l in lambda.seq) {
   avg.rmses = cbind(avg.rmses, mean(rmses))
   print(paste("iter: lambda = ", l, "done"))
 }
-```
 
-```{r}
 plot.lambda = tibble(
   lambdas = lambda.seq,
-  avg.test.MSE = c(avg.rmses)
+  avg.test.MSE = c(avg.rmses),
+  log.lambdas = log(lambda.seq)
 )
+
+min.RMSE = min(plot.lambda$avg.test.MSE)
+min.lambda = plot.lambda[which(plot.lambda$avg.test.MSE == min.RMSE),]$lambdas
 
 ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
   geom_line() +
+  geom_vline(xintercept = min.lambda, alpha = 0.5, color = "red") +
   labs(
     title = "Average test MSE as a function of log(lambda)",
     x = "log(lambda)",
@@ -256,34 +313,44 @@ ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
   )
 ```
 
-```{r optimal-lambda }
-min.RMSE = min(plot.lambda$avg.test.MSE)
-min.lambda = plot.lambda[which(plot.lambda$avg.test.MSE == min.RMSE),]$lambdas
-```
+# Tabulation
 
-After performing the 5-fold cross-validation, it seems that a $\lambda$ of `r min.lambda` minimizes the test RMSE.
-
-# Gather all of the coefficients
-
+# Assemble all models
 ```{r}
-# Coefficients from regular glmnet
-f = formula(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + compactness_mean + concavity_mean + concave.points_mean + fractal_dimension_mean + symmetry_mean + radius_se + perimeter_se + symmetry_se)
-full.fit = glm(f, family = binomial(link = "logit"), data = data)
-full.fit.coefs = full.fit$coefficients
+# Fit all three models
+full.fit = glm(f, family = binomial(link = "logit"), data = short.data)
+NR.fit = NewtonRaphson(xl.x, xl.y, logisticstuff, fit$coefficients)
+LL.fit = LogLASSO.CD(X = cbp.X, y = cbp.y, 
+                     beta = fit$coefficients, 
+                     lambda = min.lambda, tol = 1e-5)
 ```
 
 ```{r}
-nice = tibble(
+coeff.table = tibble(
   `Coefficient` = c("Intercept", "Mean radius", "Mean texture", "Mean perimeter", 
                     "Mean smoothness", "Mean compactness", "Mean concavity",
                     "Mean concave points", "Mean fractal dimension", "Mean symmetry",
                     "Standard error radius", "Standard error perimeter", "Standard error symmetry"),
-  `Full Model` = full.fit.coefs,
-  `Newton-Raphson` = c(-0.881, 5.30, 1.73, -2.29, 0.764, -0.348, 1.15,
-                       2.63, -0.36, 1.01, 0.950, -0.742, -0.881),
-  `Logistic-LASSO` = cancer.CD$coefficients
+  `Full Model` = full.fit$coefficients,
+  `Newton-Raphson` = NR.fit[nrow(NR.fit), 2:ncol(NR.fit)],
+  `Logistic-LASSO` = LL.fit$coefficients
 )
-knitr::kable(nice)
+knitr::kable(coeff.table)
 ```
 
+```{r}
+x = data %>% 
+  dplyr::select(radius_mean, texture_mean, perimeter_mean, smoothness_mean, 
+                compactness_mean, concavity_mean, concave.points_mean,
+                fractal_dimension_mean, symmetry_mean, radius_se, 
+                perimeter_se, symmetry_se) %>% 
+  as.matrix(.)
+
+fit = glm(f, family = binomial(link = "logit"), data = data)
+
+y = as.vector(ifelse(data$diagnosis == "M", 1, 0))  # response variables
+beta = round(fit$coefficients, 0)
+ans1 = NewtonRaphson(x, y, logisticstuff, fit$coefficients)
+ans1
+```
 
