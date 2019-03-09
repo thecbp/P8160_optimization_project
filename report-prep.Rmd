@@ -1,19 +1,20 @@
 ---
-title: "Final Report Preparation"
-author: "Christian Pascual"
+title: "Appendix: Code"
+author: "Christian Pascual, Xinyi Lin, Junting Ren"
 date: "3/7/2019"
-output: html_document
+output: pdf_document
 ---
 
-```{r setup }
+```{r setup, eval = FALSE }
 library(tidyverse)
 library(glmnet)
 library(modelr)
 library(matrixcalc)
+set.seed(8160)
 ```
 
 # Data preparation
-```{r data, message = FALSE }
+```{r data, message = FALSE, eval = FALSE }
 standardize = function(col) {
   mean = mean(col)
   stdev = sd(col)
@@ -38,24 +39,26 @@ short.data = data %>%
   dplyr::select(which(colnames(data) %in% needed.cols))
 ```
 
-```{r}
+# Data setup
+```{r, eval = FALSE}
 # Christian's data preparation
 cbp.X = data %>% 
   dplyr::select(radius_mean, texture_mean, perimeter_mean, smoothness_mean, 
                 compactness_mean, concavity_mean, concave.points_mean,
                 fractal_dimension_mean, symmetry_mean, radius_se, 
                 perimeter_se, symmetry_se) 
-cbp.y = data$diagnosis
 
 # Xinyi's data preparation
 xl.x = data %>% 
-  mutate(intercept = 1) %>%
+  mutate(intercept = 1) %>% 
   dplyr::select(intercept, radius_mean, texture_mean, perimeter_mean,
                 smoothness_mean, compactness_mean, concavity_mean,
                 concave.points_mean, fractal_dimension_mean, symmetry_mean,
                 radius_se, perimeter_se, symmetry_se) %>% 
   as.matrix(.)
-xl.y = as.vector(ifelse(data$diagnosis == "M", 1, 0))  
+
+cbp.y = data$diagnosis
+xl.y = as.matrix(data$diagnosis)
 
 # Coefficients from regular glmnet
 f = formula(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + compactness_mean + concavity_mean + concave.points_mean + fractal_dimension_mean + symmetry_mean + radius_se + perimeter_se + symmetry_se)
@@ -64,8 +67,7 @@ full.fit = glm(f, family = binomial(link = "logit"), data = data)
 ```
 
 # Functions needed for analysis
-
-```{r helper-functions }
+```{r helper-functions, eval = FALSE }
 soft.threshold = function(beta, gamma) {
   new.beta = beta
     if (abs(beta) > gamma && beta > 0) {
@@ -106,7 +108,8 @@ calc.obj = function(data, weights, w.resp, intercept, betas, lambda) {
 }
 ```
 
-```{r log-lasso-algo }
+# Logistic LASSO implementation
+```{r log-lasso-algo, eval = FALSE }
 LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   
   ### Parameters: #####################################################
@@ -132,9 +135,9 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   omega = calc.working.weights(p)
   obj = calc.obj(data = X, weights = omega, w.resp = z,
                  intercept = beta0, betas = beta, lambda = lambda)
-
+  
   # Initialize the row for tracking each of these parameters
-  path = c(iter = 0, intercept = beta0, beta, obj = obj)
+  path = c(iter = 0, intercept = beta0, obj = obj, beta)
     
     for (j in 1:maxiter) {
       
@@ -172,31 +175,32 @@ LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 1000) {
   }
 ```
 
-```{r}
+# Newton-Raphson implementation
+```{r, eval = FALSE}
 logisticstuff <- function(x, y, betavec) {
-  # Calculating the log-likelihood
-  u <- betavec[1] + x %*% betavec[2:length(betavec)]
+  u <- x %*% betavec
   expu <- exp(u)
-  loglik_value = sum(y * u - log(1 + expu))
-  
-  # Get vector of p for each row
+  loglik = vector(mode = "numeric", nrow(x))
+  for(i in 1:nrow(x))
+    loglik[i] = y[i]*u[i] - log(1 + expu[i])
+  loglik_value = sum(loglik)
+  # Log-likelihood at betavec
   p <- expu / (1 + expu)
   # P(Y_i=1|x_i)
   grad = vector(mode = "numeric", length(betavec))
-  grad[1] = sum(y - p)
-  for (i in 2:length(betavec))
-    grad[i] = sum(x[,i] * (y - p))
+  #grad[1] = sum(y - p)
+  for(i in 1:13)
+    grad[i] = sum(t(x[,i])%*%(y - p))
   #Hess <- -t(x)%*%p%*%t(1-p)%*%x
-  
   Hess = hess_cal(x, p)
   return(list(loglik = loglik_value, grad = grad, Hess = Hess))
 }
 
-hess_cal = function(x, p){
-  length.p = length(p)
-  hess = matrix(0, length.p, length.p)
-  for (i in 1:length.p) {
-    unit = (x[i,] %*% t(x[i,])) * p[i] * (1 - p[i])
+hess_cal = function(x, p) {
+  len = length(p)
+  hess = matrix(0, ncol(x), ncol(x))
+  for (i in 1:len) {
+    unit = x[i,] %*% t(x[i,]) * p[i] *(1 - p[i])
     #unit = t(x[i,])%*%x[i,]*p[i]*(1-p[i])
     hess = hess + unit
   }
@@ -211,9 +215,10 @@ NewtonRaphson <- function(x, y, logisticstuff, start, tol = 1e-5, maxiter = 200)
   #res <- c(0, stuff$loglik, cur)
   prevloglik <- -Inf      # To make sure it iterates
   #while(i < maxiter && abs(stuff$loglik - prevloglik) > tol && stuff$loglik > -Inf)
-  while (i < maxiter && abs(stuff$loglik - prevloglik) > tol){
+  while (i < maxiter && abs(stuff$loglik - prevloglik) > tol) {
     i <- i + 1
     prevloglik <- stuff$loglik
+    print(prevloglik)
     prev <- cur
     cur <- prev - solve(stuff$Hess) %*% stuff$grad
     stuff <- logisticstuff(x, y, cur)        # log-lik, gradient, Hessian
@@ -223,24 +228,51 @@ NewtonRaphson <- function(x, y, logisticstuff, start, tol = 1e-5, maxiter = 200)
     }
   return(res)
 }
+modified <- function(x, y, logisticstuff, start, tol=1e-5, maxiter = 200){ 
+  i <- 0 
+  cur <- start 
+  beta_len <- length(start)
+  stuff <- logisticstuff(x, y, cur) 
+  res = c(0, cur)
+  #res <- c(0, stuff$loglik,cur)
+  prevloglik <- -Inf # To make sure it iterates 
+  while(i <= maxiter && abs(stuff$loglik - prevloglik) > tol)
+  #while(i <= maxiter && abs(stuff$loglik - prevloglik) > tol && stuff$loglik > -Inf) 
+    { i <- i + 1 
+    prevloglik <- stuff$loglik 
+    prev <- cur 
+    lambda = 0
+    while (is.negative.definite(stuff$Hess-lambda*diag(beta_len)) == FALSE) {
+      lambda = lambda + 1
+    }
+    cur <- prev - solve(stuff$Hess-lambda*diag(beta_len)) %*% stuff$grad
+    #cur <- prev + (diag(beta_len)/10)%*%(stuff$grad)
+    #cur = prev + t(stuff$grad)%*%(stuff$grad)
+    stuff <- logisticstuff(x, y, cur) # log-lik, gradient, Hessian
+    res = rbind(res, c(i, cur))
+    #res <- rbind(res, c(i, stuff$loglik, cur))
+    }  
+  return(round(res,2))
+}
+
 ```
 
 # Visualizations
 
 ## betas vs lambda
-```{r lambda-optimization }
+```{r lambda-optimization, eval = FALSE }
 # Generate data to visualize how the coefficients change with the logistic LASSO
-lambda.seq = exp(seq(-7, 2, length = 200))
+lambda.seq = exp(seq(-7, 5, length = 500))
+start.betas = rep(0.001,13)
 
 coeff.path = NULL
 for (l in 1:length(lambda.seq)) {
-  fit = LogLASSO.CD(X = cbp.X, y = cbp.y, beta = full.fit$coefficients, lambda = lambda.seq[l])
+  fit = LogLASSO.CD(X = cbp.X, y = cbp.y, beta = start.betas, lambda = lambda.seq[l])
   coeff.path = rbind(coeff.path, c(lambda = lambda.seq[l], fit$coefficients))
-  
   print(paste("Iter", l, "done", sep = " ")) # progress bar
 }
 
-colnames(coeff.path) = c("lambda", paste("V", 1:13, sep = ""))
+#colnames(coeff.path) = c("lambda", paste("V", 1:13, sep = ""))
 tidy.lambda = as.tibble(coeff.path) %>% 
   gather(., key = "coeff", value = "coeff_est", V1:V13) %>% 
   mutate(
@@ -258,9 +290,9 @@ ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, gro
 ```
 
 ## Cross-validation to find the best lambda
-```{r 5-fold-cv }
-set.seed(8160)
+```{r 5-fold-cv, eval = FALSE }
 avg.rmses = NULL
+start.betas = rep(0.001, 13)
 
 # Set up the datasets for cross-validation
 folds = crossv_kfold(short.data, k = 5)
@@ -285,7 +317,7 @@ for (l in lambda.seq) {
     test.y = test$diagnosis
     
     LogLASSO = LogLASSO.CD(X = train.X, y = train.y, 
-                           beta = full.fit$coefficients, lambda = l)
+                           beta = start.betas, lambda = l)
     LL.coefs = LogLASSO$coefficients
     rmse = sum(sqrt((test.y - as.matrix(cbind(1 * rep(1, nrow(test.X)), test.X)) %*% LL.coefs)^2))
     rmses = cbind(rmses, rmse)
@@ -298,12 +330,13 @@ plot.lambda = tibble(
   lambdas = lambda.seq,
   avg.test.MSE = c(avg.rmses),
   log.lambdas = log(lambda.seq)
-)
+) %>% 
+  arrange(-log.lambdas)
 
 min.RMSE = min(plot.lambda$avg.test.MSE)
-min.lambda = plot.lambda[which(plot.lambda$avg.test.MSE == min.RMSE),]$lambdas
+min.lambda = plot.lambda[which(plot.lambda$avg.test.MSE == min.RMSE),]$log.lambdas
 
-ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
+ggplot(data = plot.lambda, aes(x = log.lambdas, y = avg.test.MSE)) +
   geom_line() +
   geom_vline(xintercept = min.lambda, alpha = 0.5, color = "red") +
   labs(
@@ -316,41 +349,84 @@ ggplot(data = plot.lambda, aes(x = log(lambdas), y = avg.test.MSE)) +
 # Tabulation
 
 # Assemble all models
-```{r}
+```{r, eval = FALSE}
 # Fit all three models
-full.fit = glm(f, family = binomial(link = "logit"), data = short.data)
-NR.fit = NewtonRaphson(xl.x, xl.y, logisticstuff, fit$coefficients)
+start.betas = rep(0.001,13)
+NR.fit = NewtonRaphson(xl.x, xl.y, logisticstuff, start.betas)
 LL.fit = LogLASSO.CD(X = cbp.X, y = cbp.y, 
-                     beta = fit$coefficients, 
-                     lambda = min.lambda, tol = 1e-5)
+                     beta = start.betas, 
+                     lambda = exp(min.lambda))
 ```
 
-```{r}
+```{r, eval = FALSE}
 coeff.table = tibble(
   `Coefficient` = c("Intercept", "Mean radius", "Mean texture", "Mean perimeter", 
                     "Mean smoothness", "Mean compactness", "Mean concavity",
                     "Mean concave points", "Mean fractal dimension", "Mean symmetry",
                     "Standard error radius", "Standard error perimeter", "Standard error symmetry"),
-  `Full Model` = full.fit$coefficients,
   `Newton-Raphson` = NR.fit[nrow(NR.fit), 2:ncol(NR.fit)],
   `Logistic-LASSO` = LL.fit$coefficients
 )
 knitr::kable(coeff.table)
 ```
 
-```{r}
-x = data %>% 
-  dplyr::select(radius_mean, texture_mean, perimeter_mean, smoothness_mean, 
-                compactness_mean, concavity_mean, concave.points_mean,
-                fractal_dimension_mean, symmetry_mean, radius_se, 
-                perimeter_se, symmetry_se) %>% 
-  as.matrix(.)
+# Evaluating predictive ability
 
-fit = glm(f, family = binomial(link = "logit"), data = data)
+```{r, eval = FALSE}
+NR.coefs = glm(diagnosis ~ ., family = binomial(link = "logit"), data = short.data)$coefficients
+```
 
-y = as.vector(ifelse(data$diagnosis == "M", 1, 0))  # response variables
-beta = round(fit$coefficients, 0)
-ans1 = NewtonRaphson(x, y, logisticstuff, fit$coefficients)
-ans1
+
+```{r, eval = FALSE}
+start.betas = rep(0.001, 13)
+
+# Set up the datasets for cross-validation
+folds = crossv_kfold(short.data, k = 10)
+
+NR.rmses = NULL
+LL.rmses = NULL
+for (k in 1:nrow(folds)) {
+  train.idx = folds[k,1][[1]][[toString(k)]]$idx
+    
+  train = short.data[train.idx,]
+  test = short.data[-train.idx,]
+    
+  train.X = train %>% 
+    dplyr::select(which(colnames(short.data) %in% needed.cols)) %>% 
+    dplyr::select(-diagnosis)
+  train.y = train$diagnosis
+    
+  test.X = test %>% 
+    dplyr::select(which(colnames(short.data) %in% needed.cols)) %>% 
+    dplyr::select(-diagnosis)
+  test.y = test$diagnosis
+    
+  LogLASSO = LogLASSO.CD(X = train.X, y = train.y, beta = start.betas, lambda = exp(min.lambda))
+  LL.coefs = LogLASSO$coefficients
+    
+  LL.rmse = sum(sqrt((test.y - as.matrix(cbind(1 * rep(1, nrow(test.X)), test.X)) %*% LL.coefs)^2))
+  LL.rmses = cbind(LL.rmses, LL.rmse)
+  
+  NR.rmse = sum(sqrt((test.y - as.matrix(cbind(1 * rep(1, nrow(test.X)), test.X)) %*% NR.coefs)^2))
+  NR.rmses = cbind(NR.rmses, NR.rmse)
+  }
+```
+
+```{r, eval = FALSE}
+a = tibble(
+  `Logistic LASSO` = c(LL.rmses),
+  `Newton-Raphson` = c(NR.rmses)
+) %>% 
+  gather(., key = "model", value = "test.RMSE", `Logistic LASSO`:`Newton-Raphson`)
+
+a %>% 
+  ggplot(data = ., aes(x = test.RMSE, fill = model)) +
+  geom_density() + 
+  theme(legend.position = "bottom") +
+  labs(
+    title = "Distribution of test RMSE in 10-fold cross validation by model",
+    x = "Test MSE",
+    y = "Density"
+  )
 ```
 
