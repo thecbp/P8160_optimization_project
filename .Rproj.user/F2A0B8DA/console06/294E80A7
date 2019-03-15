@@ -825,3 +825,43 @@ Untracked files:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 ]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git add .
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git p[Kcomit[K[Kmit -c[Km "Compuled[K[K[K[Kiled Overleaf and code documents"
+[master b3ec5ca] Compiled Overleaf and code documents
+ 9 files changed, 178 insertions(+), 104 deletions(-)
+ delete mode 100644 Untitled.Rmd
+ create mode 100644 final_report.pdf
+ create mode 100644 report-prep.pdf
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git push
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Enumerating objects: 33, done.
+Counting objects:   3% (1/33)   Counting objects:   6% (2/33)   Counting objects:   9% (3/33)   Counting objects:  12% (4/33)   Counting objects:  15% (5/33)   Counting objects:  18% (6/33)   Counting objects:  21% (7/33)   Counting objects:  24% (8/33)   Counting objects:  27% (9/33)   Counting objects:  30% (10/33)   Counting objects:  33% (11/33)   Counting objects:  36% (12/33)   Counting objects:  39% (13/33)   Counting objects:  42% (14/33)   Counting objects:  45% (15/33)   Counting objects:  48% (16/33)   Counting objects:  51% (17/33)   Counting objects:  54% (18/33)   Counting objects:  57% (19/33)   Counting objects:  60% (20/33)   Counting objects:  63% (21/33)   Counting objects:  66% (22/33)   Counting objects:  69% (23/33)   Counting objects:  72% (24/33)   Counting objects:  75% (25/33)   Counting objects:  78% (26/33)   Counting objects:  81% (27/33)   Counting objects:  84% (28/33)   Counting objects:  87% (29/33)   Counting objects:  90% (30/33)   Counting objects:  93% (31/33)   Counting objects:  96% (32/33)   Counting objects: 100% (33/33)   Counting objects: 100% (33/33), done.
+Delta compression using up to 8 threads
+Compressing objects:   6% (1/16)   Compressing objects:  12% (2/16)   Compressing objects:  18% (3/16)   Compressing objects:  25% (4/16)   Compressing objects:  31% (5/16)   Compressing objects:  37% (6/16)   Compressing objects:  43% (7/16)   Compressing objects:  50% (8/16)   Compressing objects:  56% (9/16)   Compressing objects:  62% (10/16)   Compressing objects:  68% (11/16)   Compressing objects:  75% (12/16)   Compressing objects:  81% (13/16)   Compressing objects:  87% (14/16)   Compressing objects:  93% (15/16)   Compressing objects: 100% (16/16)   Compressing objects: 100% (16/16), done.
+Writing objects:   5% (1/18)   Writing objects:  11% (2/18)   Writing objects:  16% (3/18)   Writing objects:  22% (4/18)   Writing objects:  27% (5/18)   Writing objects:  33% (6/18)   Writing objects:  38% (7/18)   Writing objects:  44% (8/18)   Writing objects:  50% (9/18)   Writing objects:  55% (10/18)   Writing objects:  61% (11/18)   Writing objects:  66% (12/18)   Writing objects:  72% (13/18)   Writing objects:  77% (14/18)   Writing objects:  83% (15/18)   Writing objects:  88% (16/18)   Writing objects:  94% (17/18)   Writing objects: 100% (18/18)   Writing objects: 100% (18/18), 3.72 MiB | 6.58 MiB/s, done.
+Total 18 (delta 10), reused 0 (delta 0)
+remote: Resolving deltas:   0% (0/10)   [Kremote: Resolving deltas:  10% (1/10)   [Kremote: Resolving deltas:  20% (2/10)   [Kremote: Resolving deltas:  30% (3/10)   [Kremote: Resolving deltas:  40% (4/10)   [Kremote: Resolving deltas:  50% (5/10)   [Kremote: Resolving deltas:  60% (6/10)   [Kremote: Resolving deltas:  70% (7/10)   [Kremote: Resolving deltas:  80% (8/10)   [Kremote: Resolving deltas:  90% (9/10)   [Kremote: Resolving deltas: 100% (10/10)   [Kremote: Resolving deltas: 100% (10/10), completed with 10 local objects.[K
+To github.com:thecbp/P8160_optimization_project.git
+   6b76a42..b3ec5ca  master -> master
+[KChristians-MacBook-Pro-2:Optimization christianpascual$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	[31mmodified:   .Rhistory[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/294E80A7.env[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/console06/INDEX001[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/pcs/windowlayoutstate.pper[m
+	[31mmodified:   .Rproj.user/F2A0B8DA/rmd-outputs[m
+	[31mmodified:   .Rproj.user/shared/notebooks/paths[m
+	[31mmodified:   report-prep.Rmd[m
+	[31mmodified:   report-prep.pdf[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ gt[Kit pull
+Enter passphrase for key '/Users/christianpascual/.ssh/id_rsa': 
+Already up to date.
+]0;~/Documents/columbia/S2019/Computing/project/OptimizationChristians-MacBook-Pro-2:Optimization christianpascual$ git commit -am "l[KCleaned up code, chan ge [Kd implementation to [K[K[Kof logistic LASSO to c[K[K include [K[K[K[K[K[K[K[Kpenalize itn[K[Kntercept too:[K"
