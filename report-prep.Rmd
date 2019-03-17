@@ -22,41 +22,31 @@ standardize = function(col) {
 }
 
 # just standardize the covariates
-standardized.data = read.csv(file = "breast-cancer-1.csv") %>% 
+raw = read.csv(file = "breast-cancer-1.csv")
+resp = raw %>% dplyr::select(diagnosis) %>% mutate(diagnosis = ifelse(diagnosis == "M", 1, 0))
+standardized.data = raw %>% 
   dplyr::select(radius_mean:fractal_dimension_worst) %>% 
   map_df(.x = ., standardize)
 
-# add back in the response and ids
-data = cbind(read.csv(file = "breast-cancer-1.csv") %>% dplyr::select(diagnosis), standardized.data) %>% 
-  mutate(diagnosis = ifelse(diagnosis == "M", 1, 0))
+data = cbind(resp, standardized.data)
+X = data %>% select(-diagnosis)
 
-needed.cols = c("diagnosis", "radius_mean", "texture_mean", "perimeter_mean",
-                "smoothness_mean", "compactness_mean", "concavity_mean",
-                "concave.points_mean", "fractal_dimension_mean",
-                "symmetry_mean", "radius_se", "perimeter_se", "symmetry_se")
+y = as.matrix(data$diagnosis)
 ```
 
-# Data setup
+# Removing multicollinearity
 ```{r, eval = FALSE}
-# Christian's data preparation
-cbp.X = data %>% 
-  mutate(intercept = 1) %>% 
-  dplyr::select(intercept, radius_mean, texture_mean, perimeter_mean, smoothness_mean, 
-                compactness_mean, concavity_mean, concave.points_mean,
-                fractal_dimension_mean, symmetry_mean, radius_se, 
-                perimeter_se, symmetry_se) 
-
-# Xinyi's data preparation
-xl.x = data %>% 
-  mutate(intercept = 1) %>% 
-  dplyr::select(intercept, radius_mean, texture_mean, perimeter_mean,
-                smoothness_mean, compactness_mean, concavity_mean,
-                concave.points_mean, fractal_dimension_mean, symmetry_mean,
-                radius_se, perimeter_se, symmetry_se) %>% 
-  as.matrix(.)
-
-cbp.y = data$diagnosis
-xl.y = as.matrix(data$diagnosis)
+# Many of the columns in the dataset are highly correlated with each other
+# Removing any columns that have correlation greater than 0.7
+X = data %>% select(-diagnosis, -perimeter_mean, -area_mean, -concave.points_mean, 
+                    -radius_worst, -area_se, -perimeter_worst, -area_worst,
+                    -concave.points_worst, -texture_worst, -smoothness_worst,
+                    -compactness_se, -compactness_mean, -compactness_worst,
+                    -concavity_worst, -fractal_dimension_worst, -perimeter_se,
+                    -concave.points_se, -fractal_dimension_se, -symmetry_worst)
+cor.matrix = cor(X)
+# Add back in intercept for 
+X = X %>% mutate(intercept = 1) %>% dplyr::select(intercept, everything())
 ```
 
 # Functions needed for analysis
@@ -68,7 +58,6 @@ soft = function(beta, gamma) {
   
   # returns a single adjusted value of the original beta
   
-  # Get the magnitude of beta - gamma, if gamma is greater, just assign to zero
   return(sign(beta) * max(abs(beta) - gamma, 0))
 }
 
@@ -89,7 +78,15 @@ calc.working.weights = function(p) {
   # p : the working probabilities, calculated by calc.cur.p
   
   # return n x 1 array of working weights for the data
-  return(p * (1 - p))
+  
+  # Check for coefficient divergence, adjust for fitted probabilities 0 & 1
+  close.to.1  = (1 - p) < 1e-5
+  close.to.0 = p < 1e-5
+  w = p * (1 - p)
+  w[which(close.to.1)] = 1e-5
+  w[which(close.to.0)] = 1e-5
+  
+  return(w)
 }
 
 calc.working.resp = function(data, resp, betas) {
@@ -101,10 +98,9 @@ calc.working.resp = function(data, resp, betas) {
   # p : the working probabilities, calculated by calc.cur.p
   
   # return n x 1 array of working responses evaluated with given betas
-  u = data %*% betas
   p = calc.cur.p(data, betas)
-  omega = calc.working.weights(p)
-  return(u + ((resp - p) / omega))
+  w = calc.working.weights(p)
+  return((data %*% betas) + ((resp - p) / w))
 }
 
 calc.obj = function(betas, w, z, data, lambda) {
@@ -115,77 +111,34 @@ calc.obj = function(betas, w, z, data, lambda) {
   # betas : all the non-intercept beta coefficients (p x 1 array)
 
   # return the log-likelihood value for a logistic model
+  LS = (2 * nrow(data))^(-1) * sum(w * (z - (data %*% betas))^2)
+  beta.penalty = lambda * sum(abs(betas))
+  return(LS + beta.penalty)
+}
+
+compile = function(data, resp, betas) {
+  # Helper function to contain all the calculations for coordinate logistic regression
+  p = calc.cur.p(data, betas)
+  w = calc.working.weights(p)
+  z = calc.working.resp(data, resp, betas)
+  return(list(
+    p = p,
+    w = w,
+    z = z
+  ))
+}
+
+calc.beta.norm = function(beta1, beta2) {
+  ### Parameters:
+  # beta1, beta2 : beta vectors to compare
   
-  u = data %*% betas
-  return((1/(2 * nrow(data))) * sum(w * (z - u)^2) + lambda * sum(abs(betas)))
+  # returns the Frobenius norm between two beta vectors
+  return(norm(as.matrix(beta1 - beta2), "F"))
 }
 ```
 
-# Logistic LASSO implementation
-```{r log-lasso-algo, eval = FALSE }
-LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-5, maxiter = 2500) {
-  ### Parameters:
-  # X : design matrix                                                 
-  # y : response variable (should be binary)                          
-  # beta : starting beta coefficients to start from                   
-  # lambda : constraining parameter for LASSO penalization            
-  # tol : how precise should our convergence be                       
-  # maxiter : how many iterations should be performed before stopping 
-  
-  # return a list containing the matrix of the coefficients and the iteration matrix
-  
-  # Convert data into matrix for easier manipulation
-  X = as.matrix(X)
-  names(beta) = colnames(X) # Assign original covariate names to the betas
-  
-  # Initialize important parameters before starting the coordinate descent
-  p = calc.cur.p(X, beta)
-  omega = calc.working.weights(p)
-  z = calc.working.resp(X, y, beta)
-  obj = calc.obj(beta, omega, z, X, lambda)
-  
-  # Iteration setup
-  j = 0
-  diff.obj = Inf
-
-  # Initialize iteration matrix
-  path = c(iter = j, beta)
-    
-  while (j < maxiter && diff.obj > tol) {
-    j = j + 1
-      
-    # Store the last betas for convergence check later
-    prev.obj = obj
-
-    # Coordinate descent through all of the betas 
-    for (k in 1:length(beta)) {
-      z.rm.j = X[,-k] %*% beta[-k]
-      val = sum(omega * X[,k] * (z - z.rm.j))
-      beta[k] = soft(val, lambda) / sum(omega * X[,k]^2)  
-    }
-    
-    # Recalculate the working parameters
-    p = calc.cur.p(X, beta)
-    omega = calc.working.weights(p)
-    z = calc.working.resp( X, y, beta)
-    obj = calc.obj(beta, omega, z, X, lambda)
-      
-    # Convergence check calculation
-    diff.obj = abs(prev.obj - obj)
-    
-    # Append it to tracking matrix
-    path = rbind(path, c(iter = j, beta))
-    } 
-  
-  return(list(
-    path = as.tibble(path),
-    coefficients = beta)
-    )
-  }
-```
-
-# Newton-Raphson implementation
-```{r, eval = FALSE}
+# Newton-Raphson Implementation
+```{r NR-algo, eval = FALSE}
 logisticstuff <- function(x, y, betavec) {
   u <- x %*% betavec
   expu <- exp(u)
@@ -198,7 +151,7 @@ logisticstuff <- function(x, y, betavec) {
   # P(Y_i=1|x_i)
   grad = vector(mode = "numeric", length(betavec))
   #grad[1] = sum(y - p)
-  for(i in 1:13)
+  for(i in 1:length(betavec))
     grad[i] = sum(t(x[,i])%*%(y - p))
   #Hess <- -t(x)%*%p%*%t(1-p)%*%x
   Hess = hess_cal(x, p)
@@ -237,7 +190,7 @@ NewtonRaphson <- function(x, y, logisticstuff, start, tol = 1e-5, maxiter = 200)
     }
   return(res)
 }
-modified <- function(x, y, logisticstuff, start, tol=1e-5, maxiter = 200){ 
+modified <- function(x, y, logisticstuff, start, tol = 1e-5, maxiter = 200){ 
   i <- 0 
   cur <- start 
   beta_len <- length(start)
@@ -254,6 +207,7 @@ modified <- function(x, y, logisticstuff, start, tol=1e-5, maxiter = 200){
     while (is.negative.definite(stuff$Hess-lambda*diag(beta_len)) == FALSE) {
       lambda = lambda + 1
     }
+    print(i)
     cur <- prev - solve(stuff$Hess-lambda*diag(beta_len)) %*% stuff$grad
     #cur <- prev + (diag(beta_len)/10)%*%(stuff$grad)
     #cur = prev + t(stuff$grad)%*%(stuff$grad)
@@ -265,27 +219,102 @@ modified <- function(x, y, logisticstuff, start, tol=1e-5, maxiter = 200){
   }
 ```
 
+# Logistic LASSO implementation
+```{r log-lasso-algo, eval = FALSE }
+LogLASSO.CD = function(X, y, beta, lambda, tol = 1e-10, maxiter = 1000) {
+  ### Parameters:
+  # X : design matrix, does include an intercept column                                                 
+  # y : response variable (should be binary)                          
+  # beta : starting beta coefficients to start from                   
+  # lambda : constraining parameter for LASSO penalization            
+  # tol : how precise should our convergence be                       
+  # maxiter : how many iterations should be performed before stopping 
+  
+  # return a list containing the matrix of the coefficients and the iteration matrix
+  
+  # Convert data into matrix for easier manipulation
+  X = as.matrix(X)
+  names(beta) = colnames(X) # Assign original covariate names to the betas
+
+  # Iteration setup
+  j = 0
+  work = compile(X, y, beta)
+  obj = calc.obj(beta, work$w, work$z, X, lambda)
+  diff.obj = diff.beta = Inf
+  path = c(iter = j, obj = obj, beta)
+  beta[1] = sum(work$w * (work$z - X %*% beta)) / sum(work$w)
+  while (j < maxiter && diff.obj > tol) {
+    
+    j = j + 1
+    prev.obj = obj
+    prev.beta = beta
+    
+    # Coordinate descent through all of the betas 
+    for (k in 2:length(beta)) {
+      work = compile(X, y, beta)
+      z.rm.k = X[,-k] %*% beta[-k]
+      val = sum(work$w * X[,k] * (work$z - z.rm.k))
+      beta[k] = (1/sum(work$w * X[,k]^2)) * soft(val, lambda)  
+    }
+    
+    # Recalculate the objective
+    work = compile(X, y, beta)
+    obj = calc.obj(beta, work$w, work$z, X, lambda)
+    
+    # Convergence check calculation
+    # diff.obj = abs(prev.obj - obj) # check difference in log-likelihood
+    diff.obj = norm(as.matrix(beta - prev.beta), "F")
+    prev.obj = obj
+    
+    # Append it to tracking matrix
+    path = rbind(path, c(iter = j, obj = obj, beta))
+    } 
+  
+  return(list(
+    path = as.tibble(path),
+    coefficients = beta,
+    iter = j,
+    obj = obj)
+    )
+  }
+```
+
 # Visualizations
 
-## betas vs lambda
+## Generating the path of solutions with different lambdas
 ```{r lambda-optimization, eval = FALSE }
-# Generate data to visualize how the coefficients change with the logistic LASSO
-lambda.seq = exp(seq(-10, 10, length = 300))
-coeffs = rep(0.001, 13)
-coeff.path = NULL
-
-for (l in 1:length(lambda.seq)) {
-  fit = LogLASSO.CD(X = cbp.X, y = cbp.y, beta = coeffs, lambda = lambda.seq[l])
-  coeffs = fit$coefficients
-  coeff.path = rbind(coeff.path, c(lambda = lambda.seq[l], coeffs))
-  print(paste("Iter", l, "done", sep = " ")) # progress bar
+# Function for generating the path of solutions with different lambdas
+create.sol.path = function(lambdas, start, data, resp) {
+  ### Parameters: 
+  # lambdas : the sequence of lambdas that you want to create solutions for
+  # start : the starting beta coefficients
+  # data : the data to estimate the coefficients from
+  # resp : the response variable you're trying to predict
+  
+  # returns an matrix of the lambda and the computed beta coefficients for that lambda
+  
+  coeff.path = NULL
+  coeffs = start
+  for (l in 1:length(lambdas)) {
+    fit = LogLASSO.CD(data, resp, coeffs, lambdas[l])
+    iter = fit$iter
+    obj = fit$obj
+    coeff.path = rbind(coeff.path, c(lambda = lambdas[l], iter = iter, obj = obj, fit$coefficients))
+    print(paste("Iter", l, "done,", iter, "loops needed for convergence",  sep = " ")) # progress bar
+  }
+  return(coeff.path)
 }
 
-tidy.lambda = as.tibble(coeff.path) %>% 
+# Create the solution path for the data
+lambda.seq = exp(seq(-3, 6, length = 300))
+coeffs = rep(0.001, 12)
+
+path = create.sol.path(lambda.seq, coeffs, X, y)
+tidy.path = as.tibble(path) %>% 
   gather(., key = "coeff", value = "coeff_est", intercept:symmetry_se) %>% 
   mutate(log.lambda = log(lambda))
 
-ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, group = coeff)) +
+ggplot(data = tidy.path, aes(x = log.lambda, y = coeff_est, color = coeff, group = coeff)) +
   geom_line(alpha = 0.5) +
   labs(
     title = "Log-LASSO Coefficient estimates as a function of log(lambda)",
@@ -296,63 +325,73 @@ ggplot(data = tidy.lambda, aes(x = log.lambda, y = coeff_est, color = coeff, gro
 ```
 
 ## Cross-validation to find the best lambda
+
 ```{r 5-fold-cv, eval = FALSE }
-avg.fold.mses = NULL
-avg.fold.se = NULL
-coeffs = rep(0.001, 13)
+# Function to do the cross-validation
 
-# Set up the datasets for cross-validation
-folds = crossv_kfold(cbp.X, k = 5)
-i = 0
+lambda.cv = function(lambdas, start, data, resp, k = 5) {
+  ### Parameters: 
+  # lambdas : the sequence of lambdas that you want to create solutions for
+  # start : the starting beta coefficients
+  # data : the data to estimate the coefficients from
+  # resp : the response variable you're trying to predict
+  
+  # returns a matrix of average test MSES against a sequence of given lambdas
 
-for (l in lambda.seq) {
-  # Reset the storage of the fold MSEs
-  fold.mses = NULL
-  i = i + 1
-  for (k in 1:nrow(folds)) {
+  folds = crossv_kfold(data, k = k)
+  path = NULL
+  i = 0
+  
+  for (l in lambdas) {
+    # Reset the storage of the fold MSEs
+    fold.mses = NULL
+    fold.ses = NULL
+    i = i + 1
+    for (k in 1:nrow(folds)) {
     
-    # Grab the specific training indexes
-    train.idx = folds[k,1][[1]][[toString(k)]]$idx
+      # Grab the specific training indexes
+      train.idx = folds[k,1][[1]][[toString(k)]]$idx
+      test.idx = folds[k,2][[1]][[toString(k)]]$idx
     
-    # Split up the data into the training and test datasets
-    train.X = cbp.X[train.idx,]
-    test.X = cbp.X[-train.idx,]
-    train.y = cbp.y[train.idx]
-    test.y = cbp.y[-train.idx]
+      # Split up the data into the training and test datasets
+      train.X = data[train.idx,]
+      test.X = data[test.idx,]
+      train.y = resp[train.idx]
+      test.y = resp[test.idx]
+      
+      # Perform the logistic-LASSO
+      fit = LogLASSO.CD(X = train.X, y = train.y, beta = start, lambda = l)
+      u = exp(as.matrix(test.X) %*% fit$coefficients)
+      z = u / (1 + u)
 
-    # Perform the logistic-LASSO
-    LogLASSO = LogLASSO.CD(X = train.X, y = train.y, beta = coeffs, lambda = l)
-    coeffs = LogLASSO$coefficients
+      # Calculate the test MSE for the fold
+      fold.mse = mean((test.y - z)^2)
+      fold.mses = c(fold.mses, fold.mse)
+    }
+    fold.se = sqrt(var(fold.mses)/5)
     
-    # Calculate the test MSE for the fold
-    fold.mse = mean((test.y - as.matrix(test.X) %*% coeffs)^2)
-    fold.mses = c(fold.mses, fold.mse)
+    path = rbind(path, 
+                 c(lambda = l, log.lambda = log(l), 
+                   avg.fold.mse = mean(fold.mses), avg.fold.se = fold.se))
+    print(paste("Iteration:", i, "done"))
   }
-  avg.fold.mses = cbind(avg.fold.mses, mean(fold.mses))
-  avg.fold.se = cbind(avg.fold.se, sqrt(var(fold.mses)/k))
-  print(paste("iter:", i, "done"))
+  return(as.tibble(path))
 }
 
-# Set up plot for checking lambda against the average fold MSE 
-plot.lambda = tibble(
-  lambdas = lambda.seq,
-  avg.fold.MSE = c(avg.fold.mses),
-  avg.fold.SE = c(avg.fold.se),
-  log.lambdas = log(lambda.seq)
-)
+cv.path = lambda.cv(lambda.seq, coeffs, X, y)
+min.mse = min(cv.path$avg.fold.mse)
+min.lambda = cv.path[which(cv.path$avg.fold.mse == min.mse),]$log.lambda
 
-min.MSE = min(plot.lambda$avg.fold.MSE)
-min.lambda = plot.lambda[which(plot.lambda$avg.fold.MSE == min.MSE),]$log.lambdas
-
-ggplot(data = plot.lambda, aes(x = log.lambdas, y = avg.fold.MSE)) +
-  geom_line() +
-  geom_errorbar(aes(ymin = avg.fold.MSE - avg.fold.SE, ymax = avg.fold.MSE + avg.fold.SE), color = "gray50") + 
-  geom_vline(xintercept = min.lambda, alpha = 0.5, color = "red") +
+cv.path %>% 
+  ggplot(data = ., aes(x = log.lambda, y = avg.fold.mse)) +
+  geom_vline(xintercept = min.lambda) +
+  geom_line(color = "red") +
+  geom_errorbar(aes(ymin = avg.fold.mse - avg.fold.se, ymax = avg.fold.mse + avg.fold.se), color = "gray50") +
   labs(
-    title = "Average test MSE as a function of log(lambda)",
+    title = "Average Test Fold MSE as a function of lambda",
     x = "log(lambda)",
     y = "Average Test MSE"
-  ) + 
+  ) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -361,17 +400,17 @@ ggplot(data = plot.lambda, aes(x = log.lambdas, y = avg.fold.MSE)) +
 # Assemble all models
 ```{r, eval = FALSE}
 # Fit all three models
-start.betas = rep(0.001,13)
-NR.fit = modified(xl.x, xl.y, logisticstuff, start.betas)
-LL.fit = LogLASSO.CD(X = cbp.X, y = cbp.y, beta = start.betas, lambda = exp(min.lambda))
+NR.fit = modified(as.matrix(X), y, logisticstuff, coeffs)
+LL.fit = LogLASSO.CD(X, y, coeffs, exp(min.lambda))
 ```
 
 ```{r, eval = FALSE}
 coeff.table = tibble(
-  `Coefficient` = c("Intercept", "Mean radius", "Mean texture", "Mean perimeter", 
-                    "Mean smoothness", "Mean compactness", "Mean concavity",
-                    "Mean concave points", "Mean fractal dimension", "Mean symmetry",
-                    "Standard error radius", "Standard error perimeter", "Standard error symmetry"),
+  `Coefficient` = c("Intercept", "Mean radius", "Mean texture", "Mean smoothness",
+                    "Mean concavity", "Mean symmetry", "Mean fractal dimension",
+                    "Standard error radius", "Standard error texture", 
+                    "Standard error smoothness", "Standard error concavity",
+                    "Standard error symmetry"),
   `Newton-Raphson` = NR.fit[nrow(NR.fit), 2:ncol(NR.fit)],
   `Logistic-LASSO` = LL.fit$coefficients
 )
@@ -381,10 +420,10 @@ knitr::kable(coeff.table)
 # Evaluating predictive ability
 
 ```{r, eval = FALSE}
-coeffs = rep(0.001, 13)
+coeffs = rep(0.001, 12)
 NR.coefs = NR.fit[nrow(NR.fit), 2:ncol(NR.fit)]
 # Set up the datasets for cross-validation
-folds = crossv_kfold(cbp.X, k = 10)
+folds = crossv_kfold(X, k = 10)
 
 NR.mses = NULL
 LL.mses = NULL
@@ -394,18 +433,23 @@ for (k in 1:nrow(folds)) {
     train.idx = folds[k,1][[1]][[toString(k)]]$idx
     
     # Split up the data into the training and test datasets
-    train.X = cbp.X[train.idx,]
-    test.X = cbp.X[-train.idx,]
-    train.y = cbp.y[train.idx]
-    test.y = cbp.y[-train.idx]
+    train.X = X[train.idx,]
+    test.X = X[-train.idx,]
+    train.y = y[train.idx]
+    test.y = y[-train.idx]
     
-  LogLASSO = LogLASSO.CD(X = train.X, y = train.y, beta = coeffs, lambda = exp(min.lambda))
-  coeffs = LogLASSO$coefficients
+  LogLASSO = LogLASSO.CD(X = train.X, y = train.y, 
+                         beta = coeffs, lambda = exp(min.lambda))
+  LL.u = exp(as.matrix(test.X) %*% LogLASSO$coefficients)
+  LL.z = LL.u / (1 + LL.u)
     
-  LL.mse = mean((test.y - as.matrix(test.X) %*% coeffs)^2)
+  NR.u = exp(as.matrix(test.X) %*% NR.coefs)
+  NR.z = NR.u / (1 + NR.u)
+  
+  LL.mse = mean((test.y - LL.z)^2)
   LL.mses = cbind(LL.mses, LL.mse)
   
-  NR.mse = mean((test.y - as.matrix(test.X) %*% NR.coefs)^2)
+  NR.mse = mean((test.y - NR.z)^2)
   NR.mses = cbind(NR.mses, NR.mse)
   }
 ```
@@ -419,7 +463,7 @@ tidy.mses = tibble(
 
 tidy.mses %>% 
   ggplot(data = ., aes(x = test.MSE, color = model, fill = model)) +
-  geom_histogram(bins = 200) + 
+  geom_density(alpha = 0.5) +
   theme(legend.position = "bottom") +
   labs(
     title = "Distribution of test MSE in 10-fold cross validation by model",
@@ -430,19 +474,5 @@ tidy.mses %>%
 ```
 
 
-```{r}
-# Sanity checks for seeing if the algorithms are correct
 
-f = formula(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + compactness_mean + concavity_mean + concave.points_mean + fractal_dimension_mean + symmetry_mean + radius_se + perimeter_se + symmetry_se)
-
-X = cbp.X %>% as.matrix(.)
-Y = as.matrix(cbp.y)
-# Coefficients from regular glm
-logit.fit = glm(f, family = binomial(link = "logit"), data = data)
-
-# Coefficienst from cross-validated logistic-LASSO
-log.lasso = cv.glmnet(X, Y, alpha = 1, family = "binomial", nfold = 5, type.measure = "mse")
-best.log.lasso = glmnet(X, Y, alpha = 1, family = "binomial", lambda = log.lasso$lambda.min)
-best.glmnet.coeffs = coef(best.log.lasso)
-```
 
